@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchConfig } from '../lib/api';
 import { poolStats } from '../lib/curve';
-import { timeAgo } from '../lib/format';
 import type { PricePoint } from './BondingChart';
 import { Portfolio } from './Portfolio';
 import { Radar } from './Radar';
@@ -9,21 +8,6 @@ import { TokenDetail } from './TokenDetail';
 import { useLaunches } from './useLaunches';
 
 type Tab = 'radar' | 'portfolio';
-
-function DetailHint() {
-  return (
-    <div className="h-full flex flex-col items-center justify-center px-10 text-center">
-      <div className="w-12 h-12 rounded-2xl border border-white/10 flex items-center justify-center text-[20px] text-white/40">
-        ↗
-      </div>
-      <p className="mt-6 text-[14px] text-white/80">Select a launch to inspect it</p>
-      <p className="mt-2 text-[12px] text-white/40 leading-relaxed max-w-[300px]">
-        Curve stats, a live price chart, safety checks, and a simulated buy quote — all pulled from the
-        MomoSwap launchpad.
-      </p>
-    </div>
-  );
-}
 
 export function AppView() {
   const feed = useLaunches();
@@ -70,33 +54,63 @@ export function AppView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.pubkey, selected?.tokensSold, selected?.paymentRaisedNet]);
 
+  const openPortfolio = () => {
+    setSelectedPubkey(null);
+    setTab('portfolio');
+  };
+
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col">
       {/* Top bar */}
-      <header className="h-16 shrink-0 border-b border-white/10 bg-black/80 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6">
+      <header className="h-16 shrink-0 border-b border-white/10 bg-black flex items-center justify-between px-4 sm:px-6">
         <button
           onClick={() => {
             window.location.hash = '';
           }}
-          className="flex items-center gap-2 cursor-pointer"
+          className="flex items-center gap-2.5 cursor-pointer"
+          title="Back to landing"
         >
-          <SynapseXMark />
+          <CrosshairMark />
           <span className="text-[15px] font-semibold tracking-tight">CookSnipe</span>
-          <span className="text-[11px] text-white/40 hidden sm:inline">/ app</span>
         </button>
 
         <div className="flex items-center gap-3">
-          <select
-            value={feed.pollMs}
-            onChange={(e) => feed.setPollMs(Number(e.target.value))}
-            className="bg-white/5 border border-white/10 rounded px-2.5 py-2 text-[11px] text-white/70 outline-none cursor-pointer"
-            title="Poll interval"
-          >
-            <option value={3000} className="bg-black">3s</option>
-            <option value={5000} className="bg-black">5s</option>
-            <option value={10000} className="bg-black">10s</option>
-            <option value={30000} className="bg-black">30s</option>
-          </select>
+          {/* Radar / Portfolio switch — works on desktop and mobile */}
+          <div className="flex items-center bg-white/5 border border-white/10 rounded-full p-0.5">
+            <button
+              onClick={() => {
+                setTab('radar');
+                setSelectedPubkey(null);
+              }}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                tab === 'radar' ? 'bg-white text-black' : 'text-white/55 hover:text-white'
+              }`}
+            >
+              Radar
+            </button>
+            <button
+              onClick={openPortfolio}
+              className={`px-4 py-1.5 rounded-full text-[11px] font-semibold cursor-pointer transition-colors ${
+                tab === 'portfolio' ? 'bg-white text-black' : 'text-white/55 hover:text-white'
+              }`}
+            >
+              Portfolio
+            </button>
+          </div>
+
+          {tab === 'radar' && !selected && (
+            <select
+              value={feed.pollMs}
+              onChange={(e) => feed.setPollMs(Number(e.target.value))}
+              className="bg-white/5 border border-white/10 rounded px-2.5 py-2 text-[11px] text-white/70 outline-none cursor-pointer"
+              title="Poll interval"
+            >
+              <option value={3000} className="bg-black">3s</option>
+              <option value={5000} className="bg-black">5s</option>
+              <option value={10000} className="bg-black">10s</option>
+              <option value={30000} className="bg-black">30s</option>
+            </select>
+          )}
 
           <button
             onClick={() => feed.setDemoMode(!feed.demoMode)}
@@ -111,11 +125,11 @@ export function AppView() {
         </div>
       </header>
 
-      {/* Status banner */}
+      {/* Single status line — error banner only when something is actually wrong */}
       {feed.demoMode && (
         <div className="shrink-0 bg-purple-500/15 border-b border-purple-500/20 px-6 py-2 text-[11px] text-purple-300 flex items-center gap-2">
           <span className="font-bold">DEMO MODE</span>
-          <span>Simulated launches for evaluation. Real feed: {feed.status === 'error' ? 'unreachable' : 'live, quiet chain'}.</span>
+          <span className="text-purple-300/80">Simulated launches — for evaluation only.</span>
         </div>
       )}
       {!feed.demoMode && feed.status === 'error' && (
@@ -123,35 +137,23 @@ export function AppView() {
           Launchpad API unreachable ({feed.error}). Try again later or switch to Demo mode.
         </div>
       )}
-      {!feed.demoMode && feed.status === 'live' && (
-        <div className="shrink-0 px-6 py-2 text-[11px] text-white/40 flex items-center gap-2.5 border-b border-white/5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#3ddc84]" />
-          Live feed · api.momoswap.fun{feed.lastUpdated ? ` · last poll ${timeAgo(Math.floor(feed.lastUpdated / 1000))}` : ''} ·{' '}
-          {feed.launches.length} live launch{feed.launches.length === 1 ? '' : 'es'}
+
+      {/* Body */}
+      {tab === 'portfolio' && !selected ? (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <Portfolio launches={feed.launches} demoMode={feed.demoMode} />
         </div>
-      )}
-
-      {/* Mobile tabs */}
-      <div className="shrink-0 flex md:hidden border-b border-white/8">
-        {(['radar', 'portfolio'] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => {
-              setTab(t);
-              if (t === 'portfolio') setSelectedPubkey(null);
-            }}
-            className={`flex-1 py-3 text-[11px] uppercase tracking-[0.18em] cursor-pointer ${
-              tab === t ? 'text-white border-b-2 border-[#3ddc84]' : 'text-white/40'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* Body — radar left, detail/portfolio right on desktop; single pane on mobile */}
-      <div className="flex-1 min-h-0 grid md:grid-cols-2">
-        <div className={`min-h-0 flex-col ${tab === 'radar' && !selected ? 'flex' : 'hidden'} md:flex`}>
+      ) : selected ? (
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <TokenDetail
+            pool={selected}
+            history={history}
+            tradeFeeBps={tradeFeeBps}
+            onBack={() => setSelectedPubkey(null)}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 overflow-hidden">
           <Radar
             launches={feed.launches}
             newKeys={feed.newKeys}
@@ -162,35 +164,21 @@ export function AppView() {
             error={feed.error}
             lastUpdated={feed.lastUpdated}
             onRefresh={feed.refresh}
+            onEnableDemo={() => feed.setDemoMode(true)}
           />
         </div>
-        <div className={`min-h-0 flex-col ${selected || tab === 'portfolio' ? 'flex' : 'hidden'} md:flex md:border-l md:border-white/10`}>
-          {selected ? (
-            <TokenDetail
-              pool={selected}
-              history={history}
-              tradeFeeBps={tradeFeeBps}
-              onBack={() => setSelectedPubkey(null)}
-            />
-          ) : tab === 'portfolio' ? (
-            <Portfolio launches={feed.launches} demoMode={feed.demoMode} />
-          ) : (
-            <DetailHint />
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-/** Small inline SynapseX mark for the app top bar. */
-function SynapseXMark() {
+/** Crosshair/radar mark matching the CookSnipe brand. */
+function CrosshairMark() {
   return (
-    <svg viewBox="-50 -50 100 100" className="w-6 h-6 text-white" fill="currentColor" aria-hidden="true">
-      <path d="M 1.5,23 L 1.5,33 C 1.5,38.5 6,43 11.5,43 L 16.5,43 C 22,43 26.5,38.5 26.5,33 Q 28,28 33,26.5 C 38.5,26.5 43,22 43,16.5 L 43,11.5 C 43,6 38.5,1.5 33,1.5 L 23,1.5 Q 12,12 1.5,23 Z" />
-      <path d="M 1.5,23 L 1.5,33 C 1.5,38.5 6,43 11.5,43 L 16.5,43 C 22,43 26.5,38.5 26.5,33 Q 28,28 33,26.5 C 38.5,26.5 43,22 43,16.5 L 43,11.5 C 43,6 38.5,1.5 33,1.5 L 23,1.5 Q 12,12 1.5,23 Z" transform="rotate(90)" />
-      <path d="M 1.5,23 L 1.5,33 C 1.5,38.5 6,43 11.5,43 L 16.5,43 C 22,43 26.5,38.5 26.5,33 Q 28,28 33,26.5 C 38.5,26.5 43,22 43,16.5 L 43,11.5 C 43,6 38.5,1.5 33,1.5 L 23,1.5 Q 12,12 1.5,23 Z" transform="rotate(180)" />
-      <path d="M 1.5,23 L 1.5,33 C 1.5,38.5 6,43 11.5,43 L 16.5,43 C 22,43 26.5,38.5 26.5,33 Q 28,28 33,26.5 C 38.5,26.5 43,22 43,16.5 L 43,11.5 C 43,6 38.5,1.5 33,1.5 L 23,1.5 Q 12,12 1.5,23 Z" transform="rotate(270)" />
+    <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#3ddc84]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="7.5" />
+      <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
+      <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" />
     </svg>
   );
 }

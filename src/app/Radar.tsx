@@ -13,6 +13,7 @@ interface RadarProps {
   error: string | null;
   lastUpdated: number | null;
   onRefresh: () => void;
+  onEnableDemo: () => void;
 }
 
 function initials(name: string): string {
@@ -30,7 +31,7 @@ function hueOf(seed: string): number {
   return h;
 }
 
-export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh }: RadarProps) {
+export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh, onEnableDemo }: RadarProps) {
   const sorted = useMemo(() => {
     const rank = (p: LaunchRow) => (p.status === 'live' ? 0 : p.status === 'upcoming' ? 1 : 2);
     return [...launches].sort((a, b) => rank(a) - rank(b) || b.launchTs - a.launchTs);
@@ -49,6 +50,9 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
           <span className="text-[11px] uppercase tracking-[0.2em] text-white/60">
             {status === 'connecting' ? 'Connecting…' : status === 'error' ? 'Feed error' : demoMode ? 'Demo feed' : 'Live feed'}
           </span>
+          {status === 'live' && !demoMode && launches.length > 0 && (
+            <span className="text-[11px] text-white/30">· {launches.length} live</span>
+          )}
         </div>
         <div className="flex items-center gap-4">
           {lastUpdated != null && <span className="text-[10px] text-white/30">{timeAgo(Math.floor(lastUpdated / 1000))}</span>}
@@ -71,20 +75,31 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
       {/* Launch list */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {sorted.length === 0 && (
-          <div className="px-6 py-16 text-center">
-            <p className="text-[13px] text-white/60 mb-2">
+          <div className="h-full flex flex-col items-center justify-center px-6 py-16 text-center">
+            <div className="w-14 h-14 rounded-2xl border border-white/10 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="w-7 h-7 text-[#3ddc84]" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <circle cx="12" cy="12" r="7.5" />
+                <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+                <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" />
+              </svg>
+            </div>
+            <p className="mt-5 text-[15px] text-white/85">
+              {status === 'error' ? 'Radar offline' : demoMode ? 'Demo feed starting…' : 'Radar is quiet'}
+            </p>
+            <p className="mt-2 text-[12px] text-white/45 leading-relaxed max-w-[340px]">
               {status === 'error'
-                ? 'Could not reach the MomoSwap launchpad API.'
+                ? 'Could not reach the MomoSwap launchpad API. It usually comes back — try a refresh.'
                 : demoMode
-                  ? 'Demo feed starting…'
-                  : 'No live launches on Cookie Chain right now.'}
+                  ? 'Spawning simulated launches…'
+                  : 'The launchpad is live and polling — no new launches on Cookie Chain right now.'}
             </p>
             {!demoMode && status !== 'error' && (
-              <p className="text-[11px] text-white/35 leading-relaxed">
-                The launchpad is live and polling every few seconds — the chain is just quiet.
-                <br />
-                Flip on <span className="text-white/60">Demo mode</span> (top right) to see the radar with simulated launches.
-              </p>
+              <button
+                onClick={onEnableDemo}
+                className="mt-6 px-5 py-2.5 rounded-full bg-purple-400/15 border border-purple-400/40 text-purple-300 text-[12px] font-semibold cursor-pointer hover:bg-purple-400/25 transition-colors"
+              >
+                ● See it with a demo feed
+              </button>
             )}
           </div>
         )}
