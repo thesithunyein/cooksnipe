@@ -143,18 +143,17 @@ export function Navbar({ entranceComplete }: NavbarProps) {
           </motion.div>
         </div>
 
-        {/* Right: Download button */}
+        {/* Right: Launch App button */}
         <motion.a
-          href="#"
-          onClick={(e) => e.preventDefault()}
+          href="#/app"
           className="flex items-center gap-2 h-9 px-3.5 sm:h-12 sm:px-6 bg-white hover:bg-[#e2e2e6] rounded-full text-black text-[13px] sm:text-[16px] font-medium whitespace-nowrap shrink-0"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           onMouseEnter={() => setDownloadHover(true)}
           onMouseLeave={() => setDownloadHover(false)}
         >
-          <i className="bi bi-apple text-[14px] sm:text-[16px]" />
-          <ScrambleText text="Download" isHovered={downloadHover} />
+          <span className="w-1.5 h-1.5 rounded-full bg-black/70" />
+          <ScrambleText text="Launch App" isHovered={downloadHover} />
         </motion.a>
       </div>
     </motion.nav>
