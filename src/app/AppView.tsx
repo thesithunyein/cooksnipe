@@ -70,7 +70,12 @@ export function AppView() {
           className="flex items-center gap-2.5 cursor-pointer"
           title="Back to landing"
         >
-          <CrosshairMark />
+          <img
+            src="/cooksnipe.png"
+            alt="CookSnipe"
+            className="w-8 h-8 rounded-full"
+            draggable={false}
+          />
           <span className="text-[15px] font-semibold tracking-tight">CookSnipe</span>
         </button>
 
@@ -172,13 +177,3 @@ export function AppView() {
   );
 }
 
-/** Crosshair/radar mark matching the CookSnipe brand. */
-function CrosshairMark() {
-  return (
-    <svg viewBox="0 0 24 24" className="w-6 h-6 text-[#3ddc84]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <circle cx="12" cy="12" r="7.5" />
-      <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
-      <path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4" />
-    </svg>
-  );
-}
