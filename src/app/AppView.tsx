@@ -73,7 +73,7 @@ export function AppView() {
           <img
             src="/cooksnipe.png"
             alt="CookSnipe"
-            className="w-8 h-8 rounded-full"
+            className="w-9 h-9 rounded-full ring-1 ring-white/15 shadow-[0_0_22px_rgba(255,60,110,0.35)]"
             draggable={false}
           />
           <span className="text-[15px] font-semibold tracking-tight">CookSnipe</span>
