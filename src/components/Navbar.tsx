@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ScrambleText } from './ScrambleText';
 import { SquashHamburger } from './SquashHamburger';
-import { SynapseXLogo } from './SynapseXLogo';
 
 const spring = { type: 'spring', stiffness: 350, damping: 28 } as const;
 
@@ -66,9 +65,14 @@ export function Navbar({ entranceComplete }: NavbarProps) {
             onMouseLeave={() => setLogoHover(false)}
             onClick={() => scrollTo(0)}
           >
-            <SynapseXLogo className="w-[18px] h-[18px] text-white" />
+            <img
+              src="/cooksnipe.png"
+              alt="CookSnipe"
+              className="w-5 h-5 rounded-full"
+              draggable={false}
+            />
             <span className="text-[16px] font-medium tracking-tight text-white">
-              <ScrambleText text="SynapseX" isHovered={logoHover} />
+              <ScrambleText text="CookSnipe" isHovered={logoHover} />
             </span>
           </motion.button>
 
@@ -109,8 +113,13 @@ export function Navbar({ entranceComplete }: NavbarProps) {
             animate={{ width: menuOpen ? 0 : 'auto', opacity: menuOpen ? 0 : 1 }}
             transition={spring}
           >
-            <SynapseXLogo className="w-[15px] h-[15px] text-white mr-2" />
-            <span className="text-[13px] font-medium tracking-tight text-white">SynapseX</span>
+            <img
+              src="/cooksnipe.png"
+              alt="CookSnipe"
+              className="w-4 h-4 rounded-full mr-2"
+              draggable={false}
+            />
+            <span className="text-[13px] font-medium tracking-tight text-white">CookSnipe</span>
           </motion.div>
 
           <motion.div

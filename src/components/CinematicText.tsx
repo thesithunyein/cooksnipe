@@ -55,7 +55,7 @@ export function CinematicText() {
               transformOrigin: 'center center',
             }}
           >
-            A neural-AI interface built on the architecture of the human nervous system. SynapseX translates synaptic
+            A neural-AI interface built on the architecture of the human nervous system. CookSnipe translates synaptic
             activity into computational intelligence. Every signal becomes measurable, structured, and visible. It
             continuously reconstructs internal state as a dynamic neural map. Biological noise is filtered into
             actionable cognitive patterns.

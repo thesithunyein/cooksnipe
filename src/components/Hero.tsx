@@ -113,7 +113,7 @@ export function Hero({ entranceComplete }: HeroProps) {
               animate={{ opacity: entranceComplete ? 1 : 0, y: entranceComplete ? 0 : 25 }}
               transition={{ duration: 0.9, delay: 0.2, ease: [0.215, 0.61, 0.355, 1] }}
             >
-              Built at the intersection of neuroscience and artificial intelligence. SynapseX continuously maps neural
+              Built at the intersection of neuroscience and artificial intelligence. CookSnipe continuously maps neural
               pathways, cognitive load, and physiological states into a single adaptive intelligence layer.
             </motion.p>
           </div>

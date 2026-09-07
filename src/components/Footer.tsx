@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { SynapseXLogo } from './SynapseXLogo';
 
 const VIDEO_URL =
   'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260622_080203_fd7f4f85-3a86-4837-8192-85e7bfe68e75.mp4';
@@ -23,8 +22,13 @@ export function Footer() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <SynapseXLogo className="w-[18px] h-[18px] text-white/70" />
-              <span className="text-white/70 text-[15px] font-medium tracking-tight">SynapseX</span>
+              <img
+                src="/cooksnipe.png"
+                alt="CookSnipe"
+                className="w-5 h-5 rounded-full"
+                draggable={false}
+              />
+              <span className="text-white/70 text-[15px] font-medium tracking-tight">CookSnipe</span>
             </motion.div>
 
             <motion.p
@@ -46,7 +50,7 @@ export function Footer() {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            (c) 2026 SynapseX Labs. All rights reserved.
+            (c) 2026 CookSnipe. All rights reserved.
           </motion.p>
         </div>
       </div>
