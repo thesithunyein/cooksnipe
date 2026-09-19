@@ -1,14 +1,23 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { ExternalLink, HandCoins } from 'lucide-react';
 import { BondingChart, CurveVisual, type PricePoint } from './BondingChart';
-import { estimateBuy, poolStats } from '../lib/curve';
+import { DexExit } from './DexExit';
+import { poolStats } from '../lib/curve';
+import { explorerToken } from '../lib/chain';
 import { formatCook, formatPrice, formatTime, pct, shortAddr } from '../lib/format';
 import type { LaunchRow } from '../lib/types';
+import { TradePanel } from './TradePanel';
+import type { WalletState } from './useWallet';
 
 interface TokenDetailProps {
   pool: LaunchRow;
   history: PricePoint[];
   tradeFeeBps: number;
+  wallet: WalletState;
   onBack: () => void;
+  /** Called after a confirmed transaction so the feed re-reads the pool. */
+  onTraded: () => void;
+  onOpenClaims?: () => void;
 }
 
 function initials(name: string): string {
@@ -30,9 +39,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailProps) {
-  const [buyInput, setBuyInput] = useState('');
-
+export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTraded, onOpenClaims }: TokenDetailProps) {
   const { price, raised, marketCap: mc, progress } = poolStats(pool);
 
   const changePct = useMemo(() => {
@@ -43,20 +50,6 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
     return ((last - first) / first) * 100;
   }, [history]);
 
-  const quote = useMemo(() => {
-    if (!buyInput || Number.isNaN(Number(buyInput)) || Number(buyInput) <= 0) return null;
-    try {
-      const paymentRaw = BigInt(Math.round(Number(buyInput) * 1e9));
-      const est = estimateBuy(pool, paymentRaw, tradeFeeBps);
-      return {
-        feeCook: Number(est.feeRaw) / 1e9,
-        tokensOut: Number(est.tokensOutRaw) / 1e6,
-      };
-    } catch {
-      return null;
-    }
-  }, [buyInput, pool, tradeFeeBps]);
-
   const safety: Array<{ ok: boolean; label: string }> = [
     { ok: !pool.antiSnipe, label: pool.antiSnipe ? 'Anti-snipe window — per-wallet buy caps at launch' : 'No anti-snipe restrictions' },
     { ok: pool.migratable, label: pool.migratable ? 'Migratable — DEX liquidity after graduation' : 'Non-migratable — no LP after graduation' },
@@ -66,7 +59,7 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
         pool.expiryMode === 'fair'
           ? 'Fair mode — pro-rata refunds if it never graduates'
           : pool.expiryMode === 'jackpot'
-            ? 'Jackpot mode — settlement payout if it never graduates'
+            ? 'Jackpot mode — one settlement payout if it never graduates'
             : pool.expiryMode === 'survivor'
               ? 'Survivor mode — last holders settle if it never graduates'
               : 'Dead mode — no refund if it never graduates',
@@ -76,7 +69,7 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-white/8 flex items-center gap-3.5">
+      <div className="px-4 sm:px-6 py-4 border-b border-white/8 flex items-center gap-3.5">
         <button onClick={onBack} className="text-white/50 hover:text-white text-[15px] cursor-pointer leading-none">←</button>
         <div
           className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold text-black"
@@ -98,14 +91,16 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
           <div className="flex items-center gap-2 mt-1 text-[11px] text-white/40">
             <a href={`https://momoswap.fun/pool/${pool.pubkey}`} target="_blank" rel="noreferrer" className="hover:text-white">MomoSwap</a>
             <span>·</span>
-            <a href={`https://cookiescan.io/token/${pool.tokenMint}`} target="_blank" rel="noreferrer" className="hover:text-white">token</a>
+            <a href={explorerToken(pool.tokenMint)} target="_blank" rel="noreferrer" className="hover:text-white inline-flex items-center gap-1">
+              token <ExternalLink size={9} />
+            </a>
             <span>·</span>
             <a href={`https://cookiescan.io/address/${pool.creator}`} target="_blank" rel="noreferrer" className="hover:text-white">creator {shortAddr(pool.creator)}</a>
           </div>
         </div>
       </div>
 
-      <div className="px-6 py-5 flex flex-col gap-6">
+      <div className="px-4 sm:px-6 py-5 flex flex-col gap-6 max-w-[900px] w-full mx-auto">
         {/* Price */}
         <div>
           <div className="flex items-end gap-2.5">
@@ -123,7 +118,7 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <Stat label="Market cap (virtual)" value={`${formatCook(String(mc * 1e9))} COOK`} />
           <Stat label="Raised" value={`${formatCook(String(raised * 1e9))} COOK`} />
           <Stat label="Buyers" value={Number(pool.participantCount || 0).toLocaleString()} />
@@ -144,6 +139,19 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
           </div>
         </div>
 
+        {/* Trade — buy, sell, or exit once it graduated */}
+        <TradePanel pool={pool} wallet={wallet} onDone={onTraded} />
+        {pool.status === 'graduated' && <DexExit pool={pool} wallet={wallet} onDone={onTraded} />}
+
+        {onOpenClaims && (
+          <button
+            onClick={onOpenClaims}
+            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] py-2.5 text-[12px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors cursor-pointer"
+          >
+            <HandCoins size={13} /> Looking for a refund, a payout or creator fees? Open the Claim Center
+          </button>
+        )}
+
         {/* Bonding curve */}
         <CurveVisual pool={pool} />
         <BondingChart history={history} />
@@ -160,33 +168,6 @@ export function TokenDetail({ pool, history, tradeFeeBps, onBack }: TokenDetailP
                 <span className="text-white/65">{s.label}</span>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Simulated buy quote */}
-        <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-          <div className="text-[11px] uppercase tracking-[0.2em] text-white/45 mb-3">
-            Simulated buy quote
-          </div>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min="0"
-              placeholder="COOK amount"
-              value={buyInput}
-              onChange={(e) => setBuyInput(e.target.value)}
-              className="flex-1 bg-black/40 border border-white/10 rounded px-3.5 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-[#3ddc84]/50"
-            />
-            <span className="text-[12px] text-white/45">COOK</span>
-          </div>
-          {quote && (
-            <div className="mt-3 text-[12px] text-white/75 space-y-1 border-t border-white/5 pt-3">
-              <div className="flex justify-between"><span className="text-white/45">Tokens out (est.)</span><span>{quote.tokensOut.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${pool.symbol}</span></div>
-              <div className="flex justify-between"><span className="text-white/45">Trade fee ({pct(tradeFeeBps / 100)})</span><span>{quote.feeCook.toFixed(4)} COOK</span></div>
-            </div>
-          )}
-          <div className="mt-3 text-[10px] text-white/35 leading-relaxed">
-            Client-side quote using the on-chain curve math. Signing & execution arrive with wallet support (next milestone).
           </div>
         </div>
       </div>

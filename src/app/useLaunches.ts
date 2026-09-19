@@ -13,12 +13,14 @@ export function useLaunches() {
   const [pollMs, setPollMs] = useState(5000);
   const [demoMode, setDemoMode] = useState(false);
   const [newKeys, setNewKeys] = useState<Set<string>>(new Set());
+  /** Pools the API itself could not decode. Reported, never hidden. */
+  const [skipped, setSkipped] = useState(0);
   const knownKeys = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
 
   const refresh = useCallback(async () => {
     try {
-      const pools = await fetchPools('all');
+      const { pools, skipped: skippedRows } = await fetchPools('all');
       const fresh = new Set<string>();
       for (const p of pools) {
         if (!firstLoad.current && !knownKeys.current.has(p.pubkey)) fresh.add(p.pubkey);
@@ -27,6 +29,7 @@ export function useLaunches() {
       firstLoad.current = false;
       setNewKeys(fresh);
       setLaunches(pools);
+      setSkipped(skippedRows);
       setStatus('live');
       setError(null);
       setLastUpdated(Date.now());
@@ -57,5 +60,17 @@ export function useLaunches() {
     return () => window.clearInterval(id);
   }, [demoMode]);
 
-  return { launches, status, error, lastUpdated, pollMs, setPollMs, demoMode, setDemoMode, newKeys, refresh };
+  return {
+    launches,
+    status,
+    error,
+    lastUpdated,
+    pollMs,
+    setPollMs,
+    demoMode,
+    setDemoMode,
+    newKeys,
+    skipped,
+    refresh,
+  };
 }

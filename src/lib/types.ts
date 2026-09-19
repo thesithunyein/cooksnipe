@@ -1,7 +1,9 @@
 // Data layer types for the MomoSwap launchpad on Cookie Chain (SVM).
 // Field names mirror the public API at api.momoswap.fun/v1/launchpad.
 
-export type PoolStatus = 'upcoming' | 'live' | 'graduated' | 'expired';
+/** Pool lifecycle as the API reports it. `ended` = past end_ts but not yet settled:
+ *  nothing left to trade, and usually something to claim. */
+export type PoolStatus = 'upcoming' | 'live' | 'ended' | 'graduated' | 'expired';
 export type ExpiryMode = 'fair' | 'jackpot' | 'survivor' | 'dead';
 
 export interface LaunchpadConfig {
@@ -10,6 +12,7 @@ export interface LaunchpadConfig {
   buybackPayment: string;
   tradeFeeBps: number;
   paused: boolean;
+  momoReady?: number;
   [key: string]: unknown;
 }
 
@@ -47,6 +50,7 @@ export interface LaunchRow {
   expiryLiquidity: string;
   totalExpiryShares: string;
   settlementRootSet: boolean;
+  winnerClaimedTotal?: string;
   graduatedAt: number;
   creatorVestAmount: string;
   creatorVestClaimed: string;
@@ -58,6 +62,7 @@ export interface LaunchRow {
   demo?: boolean;
 }
 
+/** A wallet's bonding-curve position. `shares` are program-tracked, NOT SPL tokens. */
 export interface LaunchpadPosition {
   pool: string;
   owner: string;
@@ -67,4 +72,41 @@ export interface LaunchpadPosition {
   claimed: boolean;
   winnerClaimed: boolean;
   graduatedTokensClaimed: boolean;
+}
+
+/** Off-chain token metadata JSON pinned to IPFS by the launchpad. */
+export interface LaunchpadMetadata {
+  name: string;
+  symbol: string;
+  description?: string;
+  image?: string;
+}
+
+/** A built, partial-signed legacy transaction plus the blockhash window. */
+export interface BuiltTx {
+  transactionBase64: string;
+  blockhash: string;
+  lastValidBlockHeight: number;
+  /** create-pool only: the leased `momo` mint the token will be created at. */
+  mint?: string;
+  /** A decoded map of the transaction the API says it built. Used to verify the
+   *  bytes we are about to hand a wallet — see lib/tx.ts. */
+  expectation?: TxExpectation;
+}
+
+export interface TxExpectation {
+  feePayer: string;
+  instructions: Array<{
+    programId: string;
+    accounts: Array<{ pubkey: string; signer?: boolean; writable?: boolean }>;
+    /** SHA-256 of the instruction data, hex. Verified against the built bytes. */
+    dataHash: string;
+  }>;
+}
+
+export type ClaimKind = 'fair' | 'winner' | 'graduated_tokens' | 'creator_vest';
+
+export interface WinnerProof {
+  amount: string;
+  proof: number[][];
 }

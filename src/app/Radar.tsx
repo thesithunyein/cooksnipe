@@ -51,7 +51,7 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
             {status === 'connecting' ? 'Connecting…' : status === 'error' ? 'Feed error' : demoMode ? 'Demo feed' : 'Live feed'}
           </span>
           {status === 'live' && !demoMode && launches.length > 0 && (
-            <span className="text-[11px] text-white/30">· {launches.length} live</span>
+            <span className="text-[11px] text-white/30">· {launches.filter((l) => l.status === 'live').length} live / {launches.length} total</span>
           )}
         </div>
         <div className="flex items-center gap-4">
