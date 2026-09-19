@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CookSnipe — buy, exit and claim on Cookie Chain launches</title>
+<meta name="description" content="New tokens on Cookie Chain live and die inside a week. CookSnipe is where you buy them, exit them, and collect what the launchpad still owes you.">
+<meta name="theme-color" content="#f2f0ec">
+<link rel="icon" type="image/png" href="/cooksnipe.png">
+<meta property="og:title" content="CookSnipe — buy, exit and claim on Cookie Chain launches">
+<meta property="og:description" content="Trade the MomoSwap bonding curve with Nightly, then claim the refunds, payouts and graduated tokens the launchpad forgets to tell you about.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://d2ol7oe51mr4n9.cloudfront.net" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ---------------------------------------------------------------------------
+   CookSnipe landing — one file, no build step, no dependencies.
+
+   The same design system the app runs on: paper #f2f0ec, ink #0d0c0b, hairline
+   rules, Inter Tight at 400/500 only, tight negative letter-spacing on display
+   type. The only structure here is a fixed full-screen video being scrubbed by
+   scroll, with three panels cross-fading over it.
+--------------------------------------------------------------------------- */
+:root{
+  --fg:#0d0c0b;
+  --fg-soft:rgba(13,12,11,.64);
+  --fg-faint:rgba(13,12,11,.42);
+  --shade:#f2f0ec;
+  --rule:rgba(13,12,11,.16);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --pill-bg:#0a0908;
+  --pill-fg:#ffffff;
+}
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0;
+  background:var(--shade);
+  color:var(--fg);
+  font-family:'Inter Tight','Helvetica Neue',Helvetica,Arial,sans-serif;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+::selection{ background:var(--fg); color:var(--shade); }
+
+/* ---------- 4. fixed background video layer ---------- */
+.stage{
+  position:fixed; inset:0; z-index:0; overflow:hidden; background:var(--shade);
+}
+.stage video{
+  position:absolute; top:50%; left:50%; width:100%; height:100%;
+  transform:translate(-50%,-50%) scale(1.02);
+  object-fit:cover; filter:contrast(1.02); will-change:transform;
+}
+.veil{
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(to bottom, rgba(242,240,236,.62) 0%, rgba(242,240,236,.12) 22%, rgba(242,240,236,.12) 78%, rgba(242,240,236,.66) 100%),
+    radial-gradient(100% 80% at 50% 48%, rgba(242,240,236,0) 0%, rgba(242,240,236,.34) 100%),
+    rgba(242,240,236,.20);
+}
+.grain{
+  position:absolute; inset:-50%; opacity:.13; mix-blend-mode:multiply; pointer-events:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.5'/></svg>");
+}
+
+/* ---------- 5. chrome, footer, scroll meter ---------- */
+.chrome{
+  position:fixed; left:0; right:0; top:0; z-index:40;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:max(14px, calc(env(safe-area-inset-top, 0px) + 12px)) clamp(16px, 3.4vw, 44px) 14px;
+  background:linear-gradient(to bottom, rgba(242,240,236,.94) 0%, rgba(242,240,236,.78) 72%, rgba(242,240,236,0) 100%);
+}
+.mark{
+  display:flex; align-items:center; gap:9px; font-size:15px; letter-spacing:-.012em;
+  color:var(--fg); min-width:0; flex-shrink:1; text-decoration:none;
+}
+/* The studio design put a star glyph here; this is the same slot, holding the
+   product mark so the landing and the app wear the same identity. */
+.mark-logo{ width:26px; height:26px; border-radius:999px; display:block; flex-shrink:0; }
+
+.nav{ display:flex; align-items:center; gap:clamp(14px, 2.4vw, 32px); flex-shrink:0; }
+.nav a:not(.pill){
+  color:var(--fg); text-decoration:none; font-size:14.5px; letter-spacing:-.008em;
+  opacity:.88; transition:opacity .3s var(--ease);
+}
+.nav a:not(.pill):hover{ opacity:1; }
+
+.pill{
+  display:inline-flex; align-items:center; justify-content:center; height:40px;
+  padding:0 21px; border-radius:999px; background:var(--pill-bg); color:var(--pill-fg);
+  font-size:14.5px; font-weight:500; letter-spacing:-.008em; text-decoration:none;
+  white-space:nowrap; opacity:1; border:1px solid rgba(10,9,8,.12);
+  box-shadow:0 1px 0 rgba(255,255,255,.10) inset; -webkit-text-fill-color:var(--pill-fg);
+  transition:transform .4s var(--ease), background .3s var(--ease), color .3s var(--ease);
+}
+/* Required: the nav's inherited link colour must never bleed into the dark pill
+   on mobile Safari. */
+.nav .pill{ color:#fff; -webkit-text-fill-color:#fff; }
+.pill:hover, .pill:focus-visible{
+  transform:translateY(-2px); background:#000; color:#fff; -webkit-text-fill-color:#fff;
+}
+.pill:focus-visible{ outline:2px solid var(--fg); outline-offset:2px; }
+
+.foot{
+  position:fixed; bottom:0; left:0; right:0; z-index:40; display:flex; justify-content:center;
+  padding:14px clamp(16px, 4vw, 24px) max(16px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  font-size:12px; line-height:1.45; letter-spacing:.02em; color:var(--fg-faint);
+  text-align:center; pointer-events:none;
+  background:linear-gradient(to top, rgba(242,240,236,.92) 0%, rgba(242,240,236,.72) 72%, rgba(242,240,236,0) 100%);
+}
+.foot a{ color:inherit; text-decoration:none; pointer-events:auto; }
+.foot a:hover{ color:var(--fg); }
+
+.meter{
+  position:fixed; top:0; left:0; z-index:50; height:2px; width:100%;
+  transform:scaleX(0); transform-origin:0 50%; background:var(--fg); opacity:.55;
+}
+
+/* ---------- 6. panel layer ---------- */
+.panels{ position:fixed; inset:0; z-index:20; pointer-events:none; }
+.panel{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  padding:max(104px, calc(env(safe-area-inset-top, 0px) + 88px)) clamp(20px, 5vw, 60px) max(96px, calc(env(safe-area-inset-bottom, 0px) + 80px));
+  opacity:0; will-change:opacity,transform;
+}
+.eyebrow{
+  display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+  gap:6px 12px; font-size:12.5px; letter-spacing:.045em; color:var(--fg-soft);
+  margin-bottom:clamp(16px,2vw,22px); max-width:min(46ch, 100%); text-align:center;
+}
+.panel h1{
+  margin:0; font-weight:400; font-size:clamp(34px, 7.1vw, 104px); line-height:.98;
+  letter-spacing:-.036em; max-width:15ch; text-wrap:balance;
+}
+.sub{
+  margin:clamp(18px,2.2vw,28px) 0 0; font-size:clamp(15px,1.28vw,19px);
+  line-height:1.5; letter-spacing:-.008em; color:var(--fg-soft);
+  max-width:min(46ch, 100%); text-wrap:pretty;
+}
+.cta{
+  margin-top:clamp(28px,3.4vw,44px); pointer-events:auto; width:100%;
+  display:flex; justify-content:center;
+}
+.cta .pill{ height:48px; padding:0 27px; font-size:15px; max-width:min(100%, 320px); }
+
+/* ---------- 8. preloader ---------- */
+.boot{
+  position:fixed; inset:0; z-index:90; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px; background:var(--shade);
+  transition:opacity .7s var(--ease), visibility .7s;
+}
+.boot.done{ opacity:0; visibility:hidden; }
+.boot p{ margin:0; font-size:12.5px; letter-spacing:.05em; color:var(--fg-faint); }
+.boot .bar{ width:150px; height:1px; background:var(--rule); overflow:hidden; }
+.boot .bar i{ display:block; height:100%; width:100%; background:var(--fg); transform:scaleX(0); transform-origin:0 50%; }
+
+/* ---------- 9. scroll track — the only thing that gives the page height ----- */
+.track{ position:relative; z-index:1; height:560vh; min-height:3200px; }
+
+/* ---------- 10. breakpoints ---------- */
+@media (max-width:900px){
+  .veil{
+    background:
+      linear-gradient(to bottom, rgba(242,240,236,.72) 0%, rgba(242,240,236,.18) 24%, rgba(242,240,236,.18) 76%, rgba(242,240,236,.74) 100%),
+      radial-gradient(100% 80% at 50% 48%, rgba(242,240,236,0) 0%, rgba(242,240,236,.40) 100%),
+      rgba(242,240,236,.24);
+  }
+}
+@media (max-width:720px){
+  .nav a:not(.pill){ display:none; }
+  .mark{ font-size:14px; }
+  .nav .pill{ height:38px; padding:0 16px; font-size:13.5px; }
+  .panel h1{ max-width:12ch; font-size:clamp(30px, 9.8vw, 52px); }
+  .sub{ font-size:15px; max-width:34ch; }
+  .panel{ padding:max(92px, calc(env(safe-area-inset-top, 0px) + 76px)) 18px max(88px, calc(env(safe-area-inset-bottom, 0px) + 72px)); }
+  .foot{ font-size:11px; max-width:34ch; }
+}
+@media (max-width:420px){
+  .mark-logo{ display:none; }
+  .nav .pill{ height:36px; padding:0 14px; font-size:13px; }
+  .panel h1{ max-width:11ch; font-size:clamp(28px, 10.5vw, 40px); }
+  .eyebrow{ font-size:11px; letter-spacing:.04em; max-width:28ch; }
+  .cta .pill{ width:100%; max-width:280px; height:44px; padding:0 20px; font-size:14px; }
+}
+@media (max-height:520px) and (orientation:landscape){
+  .panel{ padding:max(72px, calc(env(safe-area-inset-top, 0px) + 56px)) 24px max(64px, calc(env(safe-area-inset-bottom, 0px) + 48px)); }
+  .panel h1{ font-size:clamp(28px, 8vh, 44px); }
+  .sub{ margin-top:12px; font-size:14px; }
+  .cta{ margin-top:16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="boot" id="boot">
+  <div class="bar"><i id="bootBar"></i></div>
+  <p id="bootPct">LOADING 0%</p>
+</div>
+
+<div class="stage">
+  <video id="clip" muted playsinline preload="auto" disablepictureinpicture></video>
+  <div class="veil"></div>
+  <div class="grain"></div>
+</div>
+
+<i class="meter" id="meter"></i>
+
+<header class="chrome">
+  <a class="mark" href="/">
+    <img class="mark-logo" src="/cooksnipe.png" alt="">
+    &nbsp;CookSnipe
+  </a>
+  <nav class="nav">
+    <a href="/app">Radar</a>
+    <a href="/app">Claim center</a>
+    <a class="pill" href="/app">Open the app</a>
+  </nav>
+</header>
+
+<main class="panels">
+  <section class="panel" data-panel>
+    <p class="eyebrow">Cookie Chain <span>&middot;</span> MomoSwap launchpad</p>
+    <h1>Launched at four.<br />Gone by seven.</h1>
+    <p class="sub">Twelve pools, a week of life each, and a bonding curve that prices the whole story in public.</p>
+    <div class="cta"><a class="pill" href="/app">Open the radar</a></div>
+  </section>
+
+  <section class="panel" data-panel>
+    <p class="eyebrow">Entry and exit</p>
+    <h1>In, out, settled.</h1>
+    <p class="sub">Buy and sell on the curve with Nightly, then take the DEX exit through Cookiebox once a pool graduates.</p>
+    <div class="cta"><a class="pill" href="/app">Trade a launch</a></div>
+  </section>
+
+  <section class="panel" data-panel>
+    <p class="eyebrow">The part nobody shows you</p>
+    <h1>Smooth enough to<br />hold a refund.</h1>
+    <p class="sub">Expired pools owe their holders the raise back. Creators leave fees in the vault. One scan finds both.</p>
+    <div class="cta"><a class="pill" href="/app">Open the claim center</a></div>
+  </section>
+</main>
+
+<footer class="foot">
+  Live on Cookie Chain &nbsp;&middot;&nbsp; rpc.cookiescan.io &nbsp;&middot;&nbsp; <a href="/app">enter the app</a>
+</footer>
+
+<div class="track"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // 1920×1080, 10.04s, 241 frames, all-intra — every frame is a keyframe, which
+  // is why a scroll scrub can land on an exact frame instantly instead of waiting
+  // for the codec to seek to the nearest one.
+  var VIDEO_URL = "https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/45567745-d826-44a2-a5ce-7ef670944e60.mp4";
+
+  var clip = document.getElementById("clip");
+  var boot = document.getElementById("boot");
+  var bootBar = document.getElementById("bootBar");
+  var bootPct = document.getElementById("bootPct");
+  var meter = document.getElementById("meter");
+  var panels = [].slice.call(document.querySelectorAll("[data-panel]"));
+
+  // Each panel owns a slice of scroll as
+  // [fadeInStart, fadeInEnd, fadeOutStart, fadeOutEnd] in 0..1 page progress.
+  // The gaps between one panel's fadeOutEnd and the next's fadeInStart are
+  // deliberate dead zones — video only — so two panels are never readable at once.
+  var CUES = [
+    [0.00, 0.00, 0.15, 0.23],
+    [0.35, 0.43, 0.57, 0.65],
+    [0.77, 0.85, 1.10, 1.20]
+  ];
+  var DRIFT = 22; // px of counter-scroll travel per panel
+
+  var progress = 0;
+  var seekTo = 0;
+  var seekAt = 0;
+  var duration = 0;
+  var ready = false;
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function smooth(t) { return t * t * (3 - 2 * t); } // smoothstep
+  function ramp(p, a, b) {
+    if (b <= a) return p >= b ? 1 : 0;
+    return smooth(clamp((p - a) / (b - a), 0, 1));
+  }
+
+  function readScroll() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress = max > 0 ? clamp(window.pageYOffset / max, 0, 1) : 0;
+    if (duration) seekTo = progress * duration;
+  }
+
+  function paint() {
+    meter.style.transform = "scaleX(" + progress + ")";
+    for (var i = 0; i < panels.length; i++) {
+      var c = CUES[i] || CUES[CUES.length - 1];
+      var el = panels[i];
+      var enter = ramp(progress, c[0], c[1]);
+      var leave = ramp(progress, c[2], c[3]);
+      var o = enter * (1 - leave);
+      var y = (1 - enter) * DRIFT - leave * DRIFT;
+      el.style.opacity = o;
+      el.style.transform = "translate3d(0," + y + "px,0)";
+      el.style.pointerEvents = o > 0.6 ? "auto" : "none";
+    }
+  }
+
+  function frame() {
+    if (ready && duration) {
+      var gap = seekTo - seekAt;
+      if (Math.abs(gap) > 0.0008) {
+        seekAt += gap * 0.115; // easing factor — do not change
+        if (clip.readyState >= 2 && !clip.seeking) {
+          try { clip.currentTime = seekAt; } catch (e) {}
+        }
+      }
+    }
+    paint();
+    requestAnimationFrame(frame);
+  }
+
+  function setProgress(f) {
+    bootBar.style.transform = "scaleX(" + f + ")";
+    bootPct.textContent = "LOADING " + Math.round(f * 100) + "%";
+  }
+
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    ready = true;
+    boot.className = "boot done";
+    readScroll();
+    seekAt = seekTo;
+  }
+
+  var attached = false;
+  function attach(src) {
+    if (attached) return;
+    attached = true;
+
+    // Bind before assigning src — a cached or blob source can fire these
+    // synchronously on some browsers.
+    clip.addEventListener("loadedmetadata", function () {
+      duration = clip.duration || 0;
+      clip.pause();
+      readScroll();
+      seekAt = seekTo;
+      try { clip.currentTime = seekAt; } catch (e) {}
+    });
+    clip.addEventListener("loadeddata", start);
+    clip.addEventListener("canplaythrough", start);
+    clip.addEventListener("error", start);
+
+    clip.src = src;
+    clip.load();
+    // A stalled decode must never strand the page behind the preloader.
+    setTimeout(start, 12000);
+  }
+
+  // Fetch the mp4 as a fully buffered blob first: seeking inside a buffered blob
+  // is near instant, while range requests over the network make a scrub a
+  // slideshow. If the fetch is slow, unusable or blocked, fall back to streaming
+  // the URL directly.
+  function preload() {
+    var controller = null;
+    try { if (typeof AbortController !== "undefined") controller = new AbortController(); } catch (e) {}
+
+    var bailed = false;
+    var bail = setTimeout(function () {
+      if (attached) return;
+      bailed = true;
+      if (controller) { try { controller.abort(); } catch (e) {} }
+      setProgress(1);
+      attach(VIDEO_URL);
+    }, 15000);
+
+    var total = 0;
+    fetch(VIDEO_URL, controller ? { signal: controller.signal } : undefined)
+      .then(function (res) {
+        if (!res.ok || !res.body) throw new Error("preload failed");
+        total = Number(res.headers.get("content-length") || 0);
+        var reader = res.body.getReader();
+        var chunks = [];
+        var got = 0;
+        function pump() {
+          return reader.read().then(function (r) {
+            if (r.done) return new Blob(chunks, { type: "video/mp4" });
+            chunks.push(r.value);
+            got += r.value.length;
+            // 11e6 is the approximate byte size used when the server sends no
+            // content-length, so the bar still moves.
+            setProgress(total ? got / total : Math.min(got / 11e6, 0.95));
+            return pump();
+          });
+        }
+        return pump();
+      })
+      .then(function (blob) {
+        clearTimeout(bail);
+        setProgress(1);
+        attach(URL.createObjectURL(blob));
+      })
+      .catch(function () {
+        // Covers CORS failure, abort, and offline.
+        if (bailed) return;
+        clearTimeout(bail);
+        setProgress(1);
+        attach(VIDEO_URL);
+      });
+  }
+
+  // iOS will not paint a frame from a video that has never been played, so nudge
+  // it once on the first interaction and pause immediately.
+  function unlock() {
+    var p = clip.play();
+    if (p && p.then) p.then(function () { clip.pause(); }).catch(function () {});
+    else clip.pause();
+  }
+  ["touchstart", "pointerdown", "wheel", "keydown"].forEach(function (ev) {
+    window.addEventListener(ev, unlock, { once: true, passive: true });
+  });
+
+  window.addEventListener("scroll", readScroll, { passive: true });
+  window.addEventListener("resize", readScroll);
+
+  readScroll();
+  paint();
+  preload();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

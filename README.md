@@ -2,11 +2,24 @@
 
 **New tokens on Cookie Chain are born, graduate or die inside a week — and getting in, getting out, and collecting what the launchpad owes you means bouncing between three different sites. CookSnipe does all three in one screen, on chain.**
 
-Live app: **https://cooksnipe.sithunyein.com** · Network: **Cookie Chain** (`rpc.cookiescan.io`)
+Landing: **https://cooksnipe.sithunyein.com** · App: **https://cooksnipe.sithunyein.com/app** · Network: **Cookie Chain** (`rpc.cookiescan.io`)
 
 <p align="center">
   <img src="public/og.png" alt="CookSnipe" width="720" />
 </p>
+
+---
+
+## Two entries, one design
+
+| Path | What it is |
+|---|---|
+| `/` | **The landing** — one self-contained `public/landing.html`: no build step, no dependencies, no framework. Scrolling does not move the page content; it scrubs a fixed full-screen video frame by frame while three text panels cross-fade over it. The clip is all-intra (every frame is a keyframe), which is why a seek lands on an exact frame instantly, and the spaces between panel cues are deliberate dead zones so two panels are never readable at once. |
+| `/app` | **The product** — `app.html` plus the Vite/React bundle: radar, trade, portfolio, claim center. |
+
+Both wear the same system: paper `#f2f0ec`, ink `#0d0c0b`, Inter Tight at 400/500 only, hairline rules, dark ink pills, tight negative letter-spacing on display type. The landing's copy, cue timings and video URL sit in one clearly marked block at the top of its script, and `.track { height:560vh }` is the knob for how slow the scrub feels.
+
+Routing is handled twice on purpose: `vercel.json` rewrites for production, and a tiny middleware in `vite.config.ts` for `dev`/`preview`, so the two routes behave identically however you run it.
 
 ---
 
@@ -67,10 +80,12 @@ npm run dev          # http://localhost:5173
 
 No environment variables and no keys: the launchpad API is proxied through `/api` in dev (`vite.config.ts`) and by a rewrite in production (`vercel.json`), because the upstream sends no CORS headers. Cookie DAS and the Cookiebox aggregator do send CORS headers, so they are called directly.
 
+Then open `http://localhost:5173` for the landing and `http://localhost:5173/app` for the app.
+
 ```bash
 npm test             # 22 unit tests: curve math + transaction verification
-npm run build        # tsc --noEmit && vite build
-npm run preview      # serve the production build
+npm run build        # tsc --noEmit && vite build → app.html + landing.html
+npm run preview      # serve the production build on the same two routes
 ```
 
 Deploy: `vercel deploy --prod` (the rewrite in `vercel.json` is what keeps the API reachable in production).
@@ -78,6 +93,11 @@ Deploy: `vercel deploy --prod` (the rewrite in `vercel.json` is what keeps the A
 ## How it is put together
 
 ```
+app.html          the app's document (the landing owns the root path)
+public/
+  landing.html    the scroll-scrubbed landing — one file, edit it directly
+  cooksnipe.png   512px mark, also the registry logo
+  og.png          1200×630 social card
 src/lib/          no React, all testable
   chain.ts        the only place that talks to the RPC; genesis guard; explorer URLs
   api.ts          launchpad HTTP client — builders only, never signs
