@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ExternalLink, Loader2 } from 'lucide-react';
 import {
   buildClaimCreatorFeesTx,
@@ -37,8 +37,10 @@ interface Obligation {
 
 export interface ClaimsProps {
   wallet: WalletState;
-  /** Pre-filled address, e.g. from the connected wallet. */
+  /** Pre-filled address, e.g. from the connected wallet or a deep link. */
   initialAddress?: string;
+  /** Scan as soon as the view opens (used by /app?tab=claims&address=…). */
+  autoScan?: boolean;
 }
 
 interface ScanResult {
@@ -58,7 +60,7 @@ interface ScanResult {
  * them. So this walks every pool, asks what this address is owed on each, and
  * shows the ones with something behind them.
  */
-export function Claims({ wallet, initialAddress }: ClaimsProps) {
+export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
   const [owner, setOwner] = useState(initialAddress ?? '');
   const [scan, setScan] = useState<ScanResult | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -200,6 +202,14 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
       setScanning(false);
     }
   }, [scanAddress, tx]);
+
+  // A deep link that carries an address should just show the answer.
+  const autoRan = useRef(false);
+  useEffect(() => {
+    if (!autoScan || autoRan.current || !initialAddress) return;
+    autoRan.current = true;
+    void runScan();
+  }, [autoScan, initialAddress, runScan]);
 
   /** Returns true when the claim confirmed, false on any failure. */
   const claim = async (o: Obligation): Promise<boolean> => {

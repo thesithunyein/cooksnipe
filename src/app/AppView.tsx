@@ -18,11 +18,18 @@ const TABS: Array<[Tab, string]> = [
   ['claims', 'Claims'],
 ];
 
+/** Deep links: /app?pool=<pubkey>, /app?tab=claims, /app?tab=claims&address=<addr>. */
+const initialParams = () => new URLSearchParams(window.location.search);
+
 export function AppView() {
   const feed = useLaunches();
   const wallet = useWallet();
-  const [tab, setTab] = useState<Tab>('radar');
-  const [selectedPubkey, setSelectedPubkey] = useState<string | null>(null);
+  const [params] = useState(initialParams);
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = params.get('tab');
+    return t === 'portfolio' || t === 'claims' ? t : 'radar';
+  });
+  const [selectedPubkey, setSelectedPubkey] = useState<string | null>(() => params.get('pool'));
   const [history, setHistory] = useState<PricePoint[]>([]);
   const [tradeFeeBps, setTradeFeeBps] = useState(100);
 
@@ -67,6 +74,20 @@ export function AppView() {
     setTab(next);
     setSelectedPubkey(null);
   };
+
+  // Keep the URL in step so any screen is shareable and reloadable.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (selectedPubkey) {
+      url.searchParams.set('pool', selectedPubkey);
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.delete('pool');
+      if (tab === 'radar') url.searchParams.delete('tab');
+      else url.searchParams.set('tab', tab);
+    }
+    window.history.replaceState(null, '', url);
+  }, [tab, selectedPubkey]);
 
   return (
     <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--paper)' }}>
@@ -147,7 +168,11 @@ export function AppView() {
         ) : tab === 'portfolio' ? (
           <Portfolio feed={feed} wallet={wallet} onOpenPool={(p) => setSelectedPubkey(p.pubkey)} />
         ) : tab === 'claims' ? (
-          <Claims wallet={wallet} initialAddress={wallet.address ?? ''} />
+          <Claims
+            wallet={wallet}
+            initialAddress={params.get('address') ?? wallet.address ?? ''}
+            autoScan={Boolean(params.get('address'))}
+          />
         ) : (
           <Radar
             launches={feed.launches}
