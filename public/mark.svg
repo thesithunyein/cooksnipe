@@ -1,0 +1,25 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="CookSnipe" style="color:#0d0c0b">
+  <!--
+    CookSnipe — the mark, in one colour.
+
+    The design language is paper and ink, so the mark is an ink cookie and nothing
+    else: no gradient, no photorealism, no second colour. The bite is three arcs
+    along the rim rather than one deep wedge — a single wedge reads as Pac-Man,
+    three scallops read as a bite — and both the bite and the chips are knocked
+    OUT of the silhouette with a mask instead of drawn on top of it, which is what
+    lets one file work on paper, on ink and in a 16px tab. It inherits
+    `currentColor`, so the lockup inverts with the surface.
+  -->
+  <defs>
+    <mask id="cooksnipe-mark">
+      <rect width="64" height="64" fill="#fff"/>
+      <circle cx="45" cy="9.5" r="9" fill="#000"/>
+      <circle cx="53.7" cy="16.8" r="8.5" fill="#000"/>
+      <circle cx="56.6" cy="27.7" r="6.5" fill="#000"/>
+      <circle cx="20" cy="21" r="4.2" fill="#000"/>
+      <circle cx="40" cy="45" r="3.2" fill="#000"/>
+      <circle cx="20" cy="43" r="2.6" fill="#000"/>
+    </mask>
+  </defs>
+  <circle cx="32" cy="32" r="28" fill="currentColor" mask="url(#cooksnipe-mark)"/>
+</svg>

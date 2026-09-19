@@ -6,11 +6,20 @@
 <title>CookSnipe — buy, exit and claim on Cookie Chain launches</title>
 <meta name="description" content="New tokens on Cookie Chain live and die inside a week. CookSnipe is where you buy them, exit them, and collect what the launchpad still owes you.">
 <meta name="theme-color" content="#f2f0ec">
-<link rel="icon" type="image/png" href="/cooksnipe.png">
+<!-- The tab icon is the mark on a paper tile, so it reads in a light and a dark tab bar. -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:title" content="CookSnipe — buy, exit and claim on Cookie Chain launches">
 <meta property="og:description" content="Trade the MomoSwap bonding curve with Nightly, then claim the refunds, payouts and graduated tokens the launchpad forgets to tell you about.">
-<meta property="og:image" content="/og.png">
+<meta property="og:image" content="https://cooksnipe.sithunyein.com/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://cooksnipe.sithunyein.com/">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="CookSnipe — buy, exit and claim on Cookie Chain launches">
+<meta name="twitter:description" content="Trade the MomoSwap bonding curve with Nightly, then claim the refunds, payouts and graduated tokens the launchpad forgets to tell you about.">
+<meta name="twitter:image" content="https://cooksnipe.sithunyein.com/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://d2ol7oe51mr4n9.cloudfront.net" crossorigin>
@@ -66,6 +75,11 @@ body{
 .grain{
   position:absolute; inset:-50%; opacity:.13; mix-blend-mode:multiply; pointer-events:none;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.5'/></svg>");
+  /* An inline SVG with no width/height has no intrinsic size — without an explicit
+     background-size the browser stretches one tile over the whole element and the
+     grain turns into soft blobs. */
+  background-size:140px 140px;
+  background-repeat:repeat;
 }
 
 /* ---------- 5. chrome, footer, scroll meter ---------- */
@@ -80,8 +94,10 @@ body{
   color:var(--fg); min-width:0; flex-shrink:1; text-decoration:none;
 }
 /* The studio design put a star glyph here; this is the same slot, holding the
-   product mark so the landing and the app wear the same identity. */
-.mark-logo{ width:26px; height:26px; border-radius:999px; display:block; flex-shrink:0; }
+   product mark so the landing and the app wear the same identity. The mark is
+   inlined rather than linked so it inherits the page's ink, which is what lets
+   the same shape work on paper and on a dark surface. */
+.mark-logo{ width:26px; height:26px; display:block; flex-shrink:0; color:var(--fg); }
 
 .nav{ display:flex; align-items:center; gap:clamp(14px, 2.4vw, 32px); flex-shrink:0; }
 .nav a:not(.pill){
@@ -213,7 +229,20 @@ body{
 
 <header class="chrome">
   <a class="mark" href="/">
-    <img class="mark-logo" src="/cooksnipe.png" alt="">
+    <svg class="mark-logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <defs>
+        <mask id="marksnipe">
+          <rect width="64" height="64" fill="#fff"/>
+          <circle cx="45" cy="9.5" r="9" fill="#000"/>
+          <circle cx="53.7" cy="16.8" r="8.5" fill="#000"/>
+          <circle cx="56.6" cy="27.7" r="6.5" fill="#000"/>
+          <circle cx="20" cy="21" r="4.2" fill="#000"/>
+          <circle cx="40" cy="45" r="3.2" fill="#000"/>
+          <circle cx="20" cy="43" r="2.6" fill="#000"/>
+        </mask>
+      </defs>
+      <circle cx="32" cy="32" r="28" fill="currentColor" mask="url(#marksnipe)"/>
+    </svg>
     &nbsp;CookSnipe
   </a>
   <nav class="nav">
