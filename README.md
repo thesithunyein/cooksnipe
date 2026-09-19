@@ -9,6 +9,7 @@ and collecting what the launchpad owes you means bouncing between three differen
 CookSnipe does all three in one screen, on chain.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-0d0c0b?style=flat-square)](LICENSE)
+[![CI](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml/badge.svg)](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-22%20passing-1a7f4b?style=flat-square)](#testing)
 [![Network](https://img.shields.io/badge/network-Cookie%20Chain-0d0c0b?style=flat-square)](#cookie-chain-integration)
 [![Wallet](https://img.shields.io/badge/wallet-Nightly%20first-0d0c0b?style=flat-square)](#required-features-as-the-bounty-lists-them)

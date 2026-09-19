@@ -13,7 +13,6 @@
   "dependencies": {
     "@solana/web3.js": "^1.99.0",
     "@wallet-standard/app": "^1.1.1",
-    "framer-motion": "^12.40.0",
     "lightweight-charts": "^5.2.1",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",

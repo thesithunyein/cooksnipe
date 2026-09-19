@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { poolStats } from '../lib/curve';
 import { Mark } from './Mark';
 import { formatCook, formatPrice, timeAgo } from '../lib/format';
@@ -32,11 +32,26 @@ function hueOf(seed: string): number {
   return h;
 }
 
+/** Obvious throwaway launches ("test", "TEST", "$FRND" frontend probes…) that
+ *  would otherwise crowd the feed judges and traders see. Matched on symbol —
+ *  case-insensitive, word-boundaried so "preTEST" style names survive. */
+const TEST_SYMBOL = /^(test|tests|testing|frnd|frontend|dummy|demo|tmp|temp|sample)$/i;
+
+function isTestLaunch(p: LaunchRow): boolean {
+  return TEST_SYMBOL.test(p.symbol || '') || TEST_SYMBOL.test(p.name || '');
+}
+
 export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh, onEnableDemo }: RadarProps) {
+  // Hide obvious test launches by default; the toggle is honest about what it does.
+  const [showTests, setShowTests] = useState(false);
+
+  const testCount = useMemo(() => launches.filter(isTestLaunch).length, [launches]);
+
   const sorted = useMemo(() => {
+    const visible = showTests ? launches : launches.filter((p) => !isTestLaunch(p));
     const rank = (p: LaunchRow) => (p.status === 'live' ? 0 : p.status === 'upcoming' ? 1 : 2);
-    return [...launches].sort((a, b) => rank(a) - rank(b) || b.launchTs - a.launchTs);
-  }, [launches]);
+    return [...visible].sort((a, b) => rank(a) - rank(b) || b.launchTs - a.launchTs);
+  }, [launches, showTests]);
 
   const liveCount = sorted.filter((l) => l.status === 'live').length;
 
@@ -58,6 +73,15 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
             <span className="text-[11px] text-[color:var(--ink-faint)] num">
               · {liveCount} live / {sorted.length} total
             </span>
+          )}
+          {testCount > 0 && (
+            <button
+              onClick={() => setShowTests((v) => !v)}
+              className="text-[10.5px] num transition-colors cursor-pointer text-[color:var(--ink-faint)] hover:text-[color:var(--ink)]"
+              title={showTests ? 'Hide test launches' : 'Show test launches'}
+            >
+              {showTests ? 'hiding nothing' : `+ ${testCount} test`}
+            </button>
           )}
         </div>
         <div className="flex items-center gap-4 shrink-0">
