@@ -242,9 +242,11 @@ export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-5 sm:px-8 pb-4 shrink-0">
-        <div className="label mb-1.5">Claim center</div>
-        <p className="text-[12.5px] leading-relaxed text-[color:var(--ink-soft)] max-w-[68ch] mb-4">
+      <div className="gutter pb-4 shrink-0">
+        {/* Screen titles wear the landing's display type, so a tab and a hero
+            read as the same voice. */}
+        <h1 className="display text-[clamp(24px,3vw,34px)] mb-2.5">Claim center</h1>
+        <p className="text-[13px] leading-relaxed text-[color:var(--ink-soft)] max-w-[68ch] mb-4">
           Refunds, settlement payouts, graduated tokens and creator earnings don't announce themselves — the launchpad
           shows a pool, an explorer shows an account, and your balance shows nothing until you claim. This scans every pool
           and puts what you're owed in one list.
@@ -274,7 +276,7 @@ export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
         )}
       </div>
 
-      {scanError && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2.5 text-[11.5px]">{scanError}</div>}
+      {scanError && <div className="gutter-x mb-3 alert-danger px-3.5 py-2.5 text-[12px]">{scanError}</div>}
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {!scan && !scanning && !scanError && (
@@ -297,7 +299,7 @@ export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
         )}
 
         {scan?.obligations.map((o) => (
-          <div key={o.key} className="px-5 sm:px-8 py-4 flex items-start gap-4 hair-b">
+          <div key={o.key} className="gutter py-4 flex items-start gap-4 hair-b">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="text-[14.5px] font-medium tracking-[-0.012em] truncate">{o.pool.name}</span>
@@ -335,7 +337,7 @@ export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
       </div>
 
       {(tx.busy || tx.error || tx.result) && (
-        <div className="shrink-0 hair-t px-5 sm:px-8 py-4 space-y-2">
+        <div className="shrink-0 hair-t gutter py-4 space-y-2">
           <div className="flex items-center justify-between gap-4">
             <span className="label">Claim progress</span>
             {tx.error && (
@@ -381,7 +383,7 @@ export function Claims({ wallet, initialAddress, autoScan }: ClaimsProps) {
       )}
 
       {scan && scan.obligations.length > 0 && (
-        <div className="shrink-0 hair-t px-5 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+        <div className="shrink-0 hair-t gutter py-3.5 flex items-center justify-between gap-4">
           <span className="text-[12px] text-[color:var(--ink-soft)] num">
             {scan.obligations.length} claimable item{scan.obligations.length === 1 ? '' : 's'} across {scan.poolsChecked}{' '}
             pools

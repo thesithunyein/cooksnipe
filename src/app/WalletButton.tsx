@@ -21,7 +21,7 @@ export function WalletButton({ wallet }: { wallet: WalletState }) {
             window.setTimeout(() => setCopied(false), 1500);
           }}
           title={wallet.address}
-          className="btn btn-ghost btn-sm num"
+          className="btn btn-ghost num"
         >
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--live)' }} />
           {short(wallet.address)}
@@ -48,7 +48,7 @@ export function WalletButton({ wallet }: { wallet: WalletState }) {
 
   return (
     <div className="relative shrink-0">
-      <button onClick={() => setOpen((v) => !v)} disabled={wallet.connecting} className="btn btn-ink btn-sm">
+      <button onClick={() => setOpen((v) => !v)} disabled={wallet.connecting} className="btn btn-ink">
         {wallet.connecting ? 'Connecting…' : 'Connect wallet'}
       </button>
 

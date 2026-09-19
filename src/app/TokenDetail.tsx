@@ -32,9 +32,9 @@ function hueOf(seed: string): number {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card px-3.5 py-3">
+    <div>
       <div className="label mb-1.5">{label}</div>
-      <div className="text-[13.5px] truncate num" title={value}>
+      <div className="text-[15px] truncate num" title={value}>
         {value}
       </div>
     </div>
@@ -71,7 +71,7 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-5 sm:px-8 pb-4 hair-b flex items-center gap-3.5">
+      <div className="gutter pb-4 hair-b flex items-center gap-3.5">
         <button onClick={onBack} aria-label="Back to the radar" className="opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
           <ArrowLeft size={17} strokeWidth={1.75} />
         </button>
@@ -104,26 +104,26 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
         </div>
       </div>
 
-      <div className="px-5 sm:px-8 py-5 flex flex-col gap-7 max-w-[880px] w-full mx-auto">
+      <div className="gutter py-6 flex flex-col gap-8 max-w-[880px] w-full mx-auto">
         {/* Price */}
         <div>
           <div className="flex items-end gap-3 flex-wrap">
-            <span className="text-[clamp(34px,6vw,58px)] leading-[0.95] tracking-[-0.036em] num">{formatPrice(price)}</span>
-            <span className="text-[13px] text-[color:var(--ink-faint)] mb-1.5">COOK / token</span>
+            <span className="display text-[clamp(38px,6.4vw,88px)] num">{formatPrice(price)}</span>
+            <span className="text-[13.5px] text-[color:var(--ink-faint)] mb-2">COOK / token</span>
             {changePct !== null && (
-              <span className={`text-[12.5px] mb-1.5 num ${changePct >= 0 ? 'pos' : 'neg'}`}>
+              <span className={`text-[13px] mb-2 num ${changePct >= 0 ? 'pos' : 'neg'}`}>
                 {changePct >= 0 ? '+' : ''}
                 {changePct.toFixed(1)}%
               </span>
             )}
           </div>
-          <div className="text-[11.5px] text-[color:var(--ink-faint)] mt-2">
+          <div className="text-[12px] tracking-[0.02em] text-[color:var(--ink-faint)] mt-3">
             launched {formatTime(pool.launchTs)} · ends {formatTime(pool.endTs)}
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+        {/* Stats — hairlines, not boxes: the landing has no cells, only rules. */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-5 hair-t pt-5">
           <Stat label="Market cap (virtual)" value={`${formatCook(String(mc * 1e9))} COOK`} />
           <Stat label="Raised" value={`${formatCook(String(raised * 1e9))} COOK`} />
           <Stat label="Buyers" value={Number(pool.participantCount || 0).toLocaleString()} />

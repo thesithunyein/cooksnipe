@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { poolStats } from '../lib/curve';
+import { Mark } from './Mark';
 import { formatCook, formatPrice, timeAgo } from '../lib/format';
 import type { LaunchRow } from '../lib/types';
 
@@ -41,8 +42,8 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Pane header */}
-      <div className="shrink-0 flex items-center justify-between gap-4 px-5 sm:px-8 pb-3">
+      {/* Pane header — the landing's eyebrow row, carrying the feed's state. */}
+      <div className="shrink-0 flex items-center justify-between gap-4 gutter pb-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <span
             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -69,13 +70,13 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
         </div>
       </div>
 
-      {error && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2 text-[11.5px]">{error}</div>}
+      {error && <div className="gutter-x mb-3 alert-danger px-3.5 py-2 text-[12px]">{error}</div>}
 
-      {/* Launch list */}
+      {/* Launch list — full bleed rows on hairlines, the landing's rule weight. */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {sorted.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center px-6 py-16 text-center">
-            <img src="/cooksnipe.png" alt="" className="w-16 h-16 rounded-full opacity-90" draggable={false} />
+            <Mark size={64} className="opacity-90" />
             <p className="mt-5 text-[15px] tracking-[-0.012em]">
               {status === 'error' ? 'Radar offline' : demoMode ? 'Demo feed starting…' : 'Radar is quiet'}
             </p>
@@ -106,7 +107,7 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
                 selected ? 'bg-white' : 'hover:bg-white/60'
               }`}
             >
-              <div className="flex items-center gap-4 px-5 sm:px-8 py-4">
+              <div className="flex items-center gap-4 gutter py-4">
                 <div
                   className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
                   style={{ backgroundColor: `hsl(${hueOf(p.pubkey)} 62% 78%)` }}
@@ -147,13 +148,11 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
         })}
       </div>
 
-      {/* Footer strip */}
-      <div className="shrink-0 hair-t px-5 sm:px-8 py-2.5 text-[10.5px] text-[color:var(--ink-faint)] flex items-center justify-between">
-        <span>{demoMode ? 'Simulated feed — for evaluation only' : 'MomoSwap launchpad · on-chain data'}</span>
-        <span className="num">
-          {sorted.length} launch{sorted.length === 1 ? '' : 'es'}
-        </span>
-      </div>
+      {/*
+        No footer strip of its own any more: the shell wears the landing's footer,
+        and the live/total counts already sit in the eyebrow row above. Two
+        stacked footers read as a mistake.
+      */}
     </div>
   );
 }

@@ -201,8 +201,8 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-5 sm:px-8 pb-4 shrink-0">
-        <div className="label mb-3">Portfolio</div>
+      <div className="gutter pb-4 shrink-0">
+        <h1 className="display text-[clamp(24px,3vw,34px)] mb-3">Portfolio</h1>
         <div className="flex items-center gap-3">
           <input
             value={owner}
@@ -223,7 +223,7 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
         </p>
       </div>
 
-      {error && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2.5 text-[11.5px]">{error}</div>}
+      {error && <div className="gutter-x mb-3 alert-danger px-3.5 py-2.5 text-[12px]">{error}</div>}
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {!owner.trim() && (
@@ -242,7 +242,7 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
           <button
             key={pool.pubkey}
             onClick={() => onOpenPool(pool)}
-            className="w-full text-left px-5 sm:px-8 py-4 flex items-center gap-4 hair-b hover:bg-white/60 transition-colors cursor-pointer"
+            className="w-full text-left gutter py-4 flex items-center gap-4 hair-b hover:bg-white/60 transition-colors cursor-pointer"
           >
             <div
               className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
@@ -286,7 +286,7 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
         ))}
 
         {assets !== null && (
-          <div className="px-5 sm:px-8 py-6">
+          <div className="gutter py-6">
             <div className="label mb-3.5">
               Tokens in this wallet <span className="normal-case tracking-normal">· Cookiescan DAS</span>
             </div>
@@ -322,7 +322,7 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
       </div>
 
       {rows.length > 0 && (
-        <div className="shrink-0 hair-t px-5 sm:px-8 py-3.5 text-[12px] flex flex-wrap items-center justify-between gap-2 num">
+        <div className="shrink-0 hair-t gutter py-3.5 text-[12.5px] flex flex-wrap items-center justify-between gap-2 num">
           <span className="text-[color:var(--ink-soft)]">
             Open {formatCook(String(Math.round(totals.open * 1e9)))} COOK
             {totals.claims > 0 && <> · claimable {formatCook(String(Math.round(totals.claims * 1e9)))} COOK</>}

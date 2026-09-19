@@ -1,14 +1,14 @@
-/* Inter Tight is loaded from index.html (preconnected) rather than @imported here. */
+/* Inter Tight is loaded from app.html (preconnected) rather than @imported here. */
 @import "tailwindcss";
 
 /*
- * CookSnipe — light editorial skin.
+ * CookSnipe — one design system for the landing and the app.
  *
- * The palette and the type are the studio design: paper, near-black ink, hairline
- * rules, tight negative letter-spacing, Inter Tight at 400/500 only. The app adds
- * three functional colours (a live green, a loss red, a warning amber) because a
- * trading screen has to say "this is up" and "this failed" — but everything
- * structural stays monochrome, including progress bars and buttons.
+ * These are the landing's own tokens and habits: paper and ink only, hairline
+ * rules, the eyebrow as the one label style, Inter Tight at 400/500, tight
+ * negative letter-spacing on display type, 999px pills, safe-area insets, a film
+ * grain over the paper. Colour exists only to mean something — a live green, a
+ * loss red, a warning amber.
  */
 @theme {
   --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -33,6 +33,7 @@
   --warn: #8a6420;
   --warn-soft: rgba(138, 100, 32, 0.10);
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --edge: clamp(16px, 3.4vw, 44px); /* the landing's horizontal gutter */
 }
 
 /*
@@ -64,7 +65,6 @@ body {
   outline-offset: 2px;
 }
 
-/* Thin, quiet scrollbars — the content is dense and the chrome should not shout. */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(13, 12, 11, 0.22) transparent;
@@ -82,10 +82,23 @@ body {
 }
 
 @layer components {
+  /* ---------- surfaces: paper, hairlines and one raised card ---------- */
+
+  /* Same grain as the landing, baked into the paper so text stays crisp.
+     background-size is load-bearing: an inline SVG with no width/height has no
+     intrinsic size, so without it the browser stretches one tile across the whole
+     element and you get blobby stripes instead of grain. */
+  .paper-grain {
+    background-color: var(--paper);
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.055'/></svg>");
+    background-size: 140px 140px;
+    background-repeat: repeat;
+  }
+
   .card {
     background: var(--paper-raised);
     border: 1px solid var(--rule-soft);
-    border-radius: 14px;
+    border-radius: 12px;
   }
 
   .hair-b {
@@ -94,32 +107,51 @@ body {
   .hair-t {
     border-top: 1px solid var(--rule-soft);
   }
-  .hair-r {
-    border-right: 1px solid var(--rule-soft);
+  .hair-l {
+    border-left: 1px solid var(--rule-soft);
   }
 
-  /* Micro-label: small, uppercase, wide-tracked, faint. */
+  /* The landing's horizontal gutter, in margin form for full-bleed rows. */
+  .gutter-x {
+    margin-inline: var(--edge);
+  }
+  .gutter {
+    padding-inline: var(--edge);
+  }
+
+  /* ---------- type ---------- */
+
+  /* The landing's eyebrow is the only label style in the product. */
   .label {
-    font-size: 10.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    font-weight: 500;
+    font-size: 12.5px;
+    letter-spacing: 0.045em;
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+
+  /* Display type: 400 weight, tight tracking, tight leading. */
+  .display {
+    font-weight: 400;
+    letter-spacing: -0.036em;
+    line-height: 0.98;
   }
 
   .num {
     font-variant-numeric: tabular-nums;
   }
 
+  /* ---------- controls ---------- */
+
+  /* Geometry copied from the landing's pill so header and CTAs read the same. */
   .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    height: 38px;
-    padding: 0 18px;
+    height: 40px;
+    padding: 0 21px;
     border-radius: 999px;
-    font-size: 13.5px;
+    font-size: 14.5px;
     font-weight: 500;
     letter-spacing: -0.008em;
     white-space: nowrap;
@@ -142,7 +174,7 @@ body {
   }
   .btn-ink:hover:not(:disabled) {
     background: #000;
-    transform: translateY(-1.5px);
+    transform: translateY(-2px);
   }
   .btn-ghost {
     background: transparent;
@@ -156,6 +188,34 @@ body {
     height: 32px;
     padding: 0 14px;
     font-size: 12.5px;
+  }
+
+  /* Nav links, exactly as the landing's chrome treats its non-pill links. */
+  .app-nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(14px, 2.4vw, 32px);
+    flex-shrink: 0;
+  }
+  .nav-link {
+    background: none;
+    border: 0;
+    padding: 0 0 2px;
+    color: var(--fg, var(--ink));
+    font-family: inherit;
+    font-size: 14.5px;
+    letter-spacing: -0.008em;
+    opacity: 0.88;
+    cursor: pointer;
+    border-bottom: 1px solid transparent;
+    transition: opacity 0.3s var(--ease), border-color 0.3s var(--ease);
+  }
+  .nav-link:hover {
+    opacity: 1;
+  }
+  .nav-link-on {
+    opacity: 1;
+    border-bottom-color: var(--ink);
   }
 
   .field {
@@ -207,6 +267,7 @@ body {
     color: #fff;
   }
 
+  /* Segmented switch — used for buy/sell, the one place a mode changes. */
   .tabs {
     display: inline-flex;
     align-items: center;
@@ -276,6 +337,75 @@ body {
   .link:hover {
     color: var(--ink);
     border-bottom-color: var(--rule);
+  }
+
+  /* ---------- landing furniture, reused in the app ---------- */
+
+  /* Scroll meter: the landing's 2px ink hairline, pinned to the top edge. */
+  .meter {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    height: 2px;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background: var(--ink);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* Chrome and footer both fade into the content instead of cutting it. */
+  .chrome-fade {
+    background: linear-gradient(
+      to bottom,
+      rgba(242, 240, 236, 0.94) 0%,
+      rgba(242, 240, 236, 0.78) 72%,
+      rgba(242, 240, 236, 0) 100%
+    );
+  }
+  .foot-fade {
+    background: linear-gradient(
+      to top,
+      rgba(242, 240, 236, 0.92) 0%,
+      rgba(242, 240, 236, 0.72) 72%,
+      rgba(242, 240, 236, 0) 100%
+    );
+  }
+
+  /* Boot preloader: the landing's bar and counter, at app speed. */
+  .boot {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--paper);
+    transition: opacity 0.7s var(--ease), visibility 0.7s;
+  }
+  .boot.done {
+    opacity: 0;
+    visibility: hidden;
+  }
+  .boot p {
+    margin: 0;
+    font-size: 12.5px;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+  }
+  .boot .bar {
+    width: 150px;
+    height: 1px;
+    border-radius: 0;
+    background: var(--rule);
+  }
+  .boot .bar i {
+    border-radius: 0;
+    transform-origin: 0 50%;
   }
 }
 
