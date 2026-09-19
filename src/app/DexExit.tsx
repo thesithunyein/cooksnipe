@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Check, ExternalLink, Loader2, Route } from 'lucide-react';
+import { Check, Loader2, Route } from 'lucide-react';
 import { buildAggSwapTx, quoteAgg, type AggQuote } from '../lib/cookiebox';
 import { COOK_MINT, TOKEN_DECIMALS, explorerTx } from '../lib/chain';
 import { getWalletAssets } from '../lib/das';
@@ -89,6 +89,7 @@ export function DexExit({ pool, wallet, onDone }: DexExitProps) {
 
   const outCook = quote ? Number(quote.netOutAmount) / 1e9 : 0;
   const minOut = quote ? Number(quote.minOutAmount) / 1e9 : 0;
+  const feeCook = quote ? Number(quote.feeAmount) / 1e9 : 0;
   const overBalance = balance !== null && Number(amount) > balance;
 
   const sell = async () => {
@@ -119,34 +120,34 @@ export function DexExit({ pool, wallet, onDone }: DexExitProps) {
   const canSell = Boolean(wallet.address) && Boolean(quote) && !overBalance && !tx.busy;
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/45">
-          <Route size={12} /> Exit via Cookiebox
-        </div>
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-3.5 gap-3">
+        <span className="label inline-flex items-center gap-2">
+          <Route size={12} strokeWidth={1.75} /> Exit via Cookiebox
+        </span>
         {balance !== null && (
-          <div className="text-[10.5px] text-white/40">
+          <span className="text-[11px] text-[color:var(--ink-faint)] num">
             balance {balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${pool.symbol}
-          </div>
+          </span>
         )}
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <input
           inputMode="decimal"
           placeholder={`$${pool.symbol} to sell`}
           value={amount}
           onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-          className="flex-1 bg-black/40 border border-white/10 rounded px-3.5 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-[#3ddc84]/50"
+          className="field flex-1 num"
         />
         <select
           value={slippageBps}
           onChange={(e) => setSlippageBps(Number(e.target.value))}
-          className="bg-white/5 border border-white/10 rounded px-2 py-2.5 text-[11px] text-white/70 outline-none cursor-pointer"
-          title="Slippage tolerance"
+          aria-label="Slippage tolerance"
+          className="h-[42px] rounded-[10px] border border-[color:var(--rule)] bg-white px-2.5 text-[11.5px] text-[color:var(--ink-soft)] outline-none cursor-pointer"
         >
           {SLIPPAGE.map((s) => (
-            <option key={s} value={s} className="bg-black">
+            <option key={s} value={s}>
               {(s / 100).toFixed(1)}% slip
             </option>
           ))}
@@ -154,47 +155,43 @@ export function DexExit({ pool, wallet, onDone }: DexExitProps) {
       </div>
 
       {balance !== null && balance > 0 && (
-        <button
-          onClick={() => setAmount(String(balance))}
-          className="mt-2 text-[10.5px] text-[#3ddc84] hover:underline cursor-pointer"
-        >
+        <button onClick={() => setAmount(String(balance))} className="link mt-2.5 text-[11px] cursor-pointer">
           Sell everything ({balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${pool.symbol})
         </button>
       )}
 
       {quoting && (
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-white/45">
+        <div className="mt-4 flex items-center gap-2 text-[11.5px] text-[color:var(--ink-faint)]">
           <Loader2 size={12} className="animate-spin" /> Asking Cookiebox for a route…
         </div>
       )}
 
       {quote && !quoting && (
-        <div className="mt-3 text-[12px] text-white/75 space-y-1 border-t border-white/5 pt-3">
+        <div className="mt-4 pt-3.5 border-t border-[color:var(--rule-soft)] space-y-1.5 text-[12.5px] num">
           <div className="flex justify-between">
-            <span className="text-white/45">You receive (est.)</span>
+            <span className="text-[color:var(--ink-soft)]">You receive (est.)</span>
             <span>{outCook.toLocaleString(undefined, { maximumFractionDigits: 4 })} COOK</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-white/45">Minimum after slippage</span>
+            <span className="text-[color:var(--ink-soft)]">Minimum after slippage</span>
             <span>{minOut.toLocaleString(undefined, { maximumFractionDigits: 4 })} COOK</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-white/45">Router fee</span>
-            <span>
-              {quote.feePct.toFixed(2)}% · {Number(quote.feeAmount) / 1e9 > 0 ? `${(Number(quote.feeAmount) / 1e9).toFixed(4)} COOK` : 'included'}
-            </span>
+            <span className="text-[color:var(--ink-soft)]">Router fee</span>
+            <span>{feeCook > 0 ? `${quote.feePct.toFixed(2)}% · ${feeCook.toFixed(6)} COOK` : 'included in route'}</span>
           </div>
           {quote.priceImpactPct !== null && (
             <div className="flex justify-between">
-              <span className="text-white/45">Price impact</span>
-              <span className={quote.priceImpactPct > 5 ? 'text-amber-300' : ''}>
-                {quote.priceImpactPct.toFixed(2)}%
-              </span>
+              <span className="text-[color:var(--ink-soft)]">Price impact</span>
+              <span className={quote.priceImpactPct > 5 ? 'warnc' : ''}>{quote.priceImpactPct.toFixed(2)}%</span>
             </div>
           )}
           <div className="flex justify-between gap-3">
-            <span className="text-white/45 shrink-0">Route</span>
-            <span className="text-right text-[11px] text-white/60 truncate" title={quote.path.join(' → ')}>
+            <span className="text-[color:var(--ink-soft)] shrink-0">Route</span>
+            <span
+              className="text-right text-[11.5px] text-[color:var(--ink-faint)] truncate"
+              title={quote.path.join(' → ')}
+            >
               {quote.isSplit ? `${quote.segments.length}-way split · ` : ''}
               {quote.segments.map((s) => s.venue).join(' → ') || 'direct'}
             </span>
@@ -202,72 +199,57 @@ export function DexExit({ pool, wallet, onDone }: DexExitProps) {
         </div>
       )}
 
-      {quoteError && (
-        <div className="mt-3 flex items-start gap-2 text-[11px] text-amber-300/90">
-          <AlertTriangle size={12} className="mt-[2px] shrink-0" />
-          {quoteError}
-        </div>
-      )}
+      {quoteError && <div className="mt-3.5 alert-warn px-3 py-2.5 text-[11.5px]">{quoteError}</div>}
 
       {overBalance && (
-        <div className="mt-3 flex items-start gap-2 text-[11px] text-amber-300/90">
-          <AlertTriangle size={12} className="mt-[2px] shrink-0" />
+        <div className="mt-3.5 alert-warn px-3 py-2.5 text-[11.5px] leading-relaxed">
           You hold {balance?.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${pool.symbol}. Claim graduated
           tokens first if you have curve shares left.
         </div>
       )}
 
-      <button
-        onClick={() => void sell()}
-        disabled={!canSell}
-        className="mt-3.5 w-full flex items-center justify-center gap-2 rounded-lg bg-[#3ddc84] text-black py-2.5 text-[12.5px] font-semibold hover:bg-[#54e79b] transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-default"
-      >
-        {tx.busy ? <Loader2 size={14} className="animate-spin" /> : <Route size={14} />}
+      <button onClick={() => void sell()} disabled={!canSell} className="btn btn-ink w-full mt-4">
+        {tx.busy ? <Loader2 size={14} className="animate-spin" /> : null}
         {tx.busy ? 'Working…' : 'Sell on the DEX'}
       </button>
 
       {(tx.busy || tx.error || tx.result) && (
-        <div className="mt-3.5 border-t border-white/5 pt-3.5 space-y-2">
+        <div className="mt-4 pt-4 border-t border-[color:var(--rule-soft)] space-y-2">
           {VISIBLE_STAGES.map((s) => (
             <div key={s.stage} className="flex items-start gap-2.5 text-[12px]">
               <span className="w-4 h-4 mt-[2px] shrink-0 flex items-center justify-center">
-                {tx.progress.status[s.stage] === 'ok' && <Check size={13} className="text-[#3ddc84]" />}
-                {tx.progress.status[s.stage] === 'fail' && <span className="text-red-400 text-[12px]">×</span>}
-                {tx.progress.status[s.stage] === 'start' && <Loader2 size={13} className="text-white/60 animate-spin" />}
+                {tx.progress.status[s.stage] === 'ok' && <Check size={12} strokeWidth={2} style={{ color: 'var(--live)' }} />}
+                {tx.progress.status[s.stage] === 'fail' && <span className="neg text-[12px]">×</span>}
+                {tx.progress.status[s.stage] === 'start' && <Loader2 size={11} className="animate-spin opacity-55" />}
               </span>
               <span className="min-w-0">
-                <span className={tx.progress.status[s.stage] ? 'text-white/85' : 'text-white/30'}>{s.label}</span>
+                <span className={tx.progress.status[s.stage] ? '' : 'text-[color:var(--ink-faint)]'}>{s.label}</span>
                 {tx.progress.detail[s.stage] && (
-                  <span className="block text-[10.5px] text-white/40 mt-0.5 break-words">
+                  <span className="block text-[10.5px] text-[color:var(--ink-faint)] mt-0.5 break-words">
                     {tx.progress.detail[s.stage]}
                   </span>
                 )}
               </span>
             </div>
           ))}
-          {tx.error && (
-            <div className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-300 leading-relaxed">
-              {tx.error}
-            </div>
-          )}
+          {tx.error && <div className="alert-danger px-3 py-2.5 text-[11.5px] leading-relaxed">{tx.error}</div>}
           {tx.result && (
             <a
               href={explorerTx(tx.result.signature)}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded border border-[#3ddc84]/30 bg-[#3ddc84]/10 px-3 py-2 text-[11px] text-[#3ddc84] break-all hover:underline"
+              className="alert-live px-3 py-2.5 text-[11.5px] block break-all"
             >
-              <Check size={12} className="shrink-0" /> Swapped — {tx.result.signature.slice(0, 18)}…
-              <ExternalLink size={10} className="shrink-0" />
+              Swapped — {tx.result.signature}
             </a>
           )}
         </div>
       )}
 
-      <div className="mt-3 text-[10px] text-white/35 leading-relaxed">
-        Routed by Cookiebox (agg.cookiebox.app). The router returns no instruction description, so this path is verified
-        by simulation rather than byte comparison — the pipeline says so at the check step above.
-      </div>
+      <p className="mt-4 text-[10.5px] leading-relaxed text-[color:var(--ink-faint)]">
+        Routed by Cookiebox (agg.cookiebox.app). The router returns no instruction description, so this path is verified by
+        simulation rather than byte comparison — the pipeline says so at the check step above.
+      </p>
     </div>
   );
 }

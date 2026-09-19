@@ -1,29 +1,290 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
-
+/* Inter Tight is loaded from index.html (preconnected) rather than @imported here. */
 @import "tailwindcss";
 
+/*
+ * CookSnipe — light editorial skin.
+ *
+ * The palette and the type are the studio design: paper, near-black ink, hairline
+ * rules, tight negative letter-spacing, Inter Tight at 400/500 only. The app adds
+ * three functional colours (a live green, a loss red, a warning amber) because a
+ * trading screen has to say "this is up" and "this failed" — but everything
+ * structural stays monochrome, including progress bars and buttons.
+ */
 @theme {
-  --font-sans: "Space Mono", monospace;
-  --font-serif: "Space Mono", monospace;
-  --font-mono: "Space Mono", monospace;
+  --font-sans: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-serif: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Inter Tight", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+:root {
+  --paper: #f2f0ec;
+  --paper-raised: #ffffff;
+  --ink: #0d0c0b;
+  --ink-soft: rgba(13, 12, 11, 0.64);
+  --ink-faint: rgba(13, 12, 11, 0.42);
+  --rule: rgba(13, 12, 11, 0.16);
+  --rule-soft: rgba(13, 12, 11, 0.09);
+  --pill-bg: #0a0908;
+  --pill-fg: #ffffff;
+  --live: #1a7f4b;
+  --live-soft: rgba(26, 127, 75, 0.09);
+  --danger: #a8332a;
+  --danger-soft: rgba(168, 51, 42, 0.08);
+  --warn: #8a6420;
+  --warn-soft: rgba(138, 100, 32, 0.10);
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 /*
- * No global `* { margin: 0; padding: 0 }` here on purpose.
- *
- * Tailwind's preflight already zeroes that inside `@layer base`, and an
- * unlayered rule would outrank `@layer utilities` — which silently kills every
- * px-/py-/p-/m- utility in the app regardless of specificity.
+ * No global `* { margin: 0; padding: 0 }`: an unlayered rule outranks
+ * `@layer utilities` and silently kills every spacing utility in the app.
  */
 html,
 body {
-  background: #000;
-  color: #fff;
-  overflow-x: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 body {
   margin: 0;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Thin, quiet scrollbars — the content is dense and the chrome should not shout. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(13, 12, 11, 0.22) transparent;
+}
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(13, 12, 11, 0.18);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule-soft);
+    border-radius: 14px;
+  }
+
+  .hair-b {
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .hair-t {
+    border-top: 1px solid var(--rule-soft);
+  }
+  .hair-r {
+    border-right: 1px solid var(--rule-soft);
+  }
+
+  /* Micro-label: small, uppercase, wide-tracked, faint. */
+  .label {
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      transform 0.4s var(--ease),
+      background 0.25s var(--ease),
+      color 0.25s var(--ease),
+      border-color 0.25s var(--ease);
+  }
+  .btn:disabled {
+    opacity: 0.38;
+    cursor: default;
+  }
+  .btn-ink {
+    background: var(--pill-bg);
+    color: var(--pill-fg);
+    border: 1px solid rgba(10, 9, 8, 0.12);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+  }
+  .btn-ink:hover:not(:disabled) {
+    background: #000;
+    transform: translateY(-1.5px);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(13, 12, 11, 0.045);
+  }
+  .btn-sm {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 12.5px;
+  }
+
+  .field {
+    width: 100%;
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: var(--ink);
+    transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  }
+  .field::placeholder {
+    color: var(--ink-faint);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--ink-soft);
+    box-shadow: 0 0 0 3px rgba(13, 12, 11, 0.05);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 999px;
+    border: 1px solid var(--rule-soft);
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .chip-live {
+    background: var(--live-soft);
+    border-color: rgba(26, 127, 75, 0.22);
+    color: var(--live);
+  }
+  .chip-warn {
+    background: var(--warn-soft);
+    border-color: rgba(138, 100, 32, 0.22);
+    color: var(--warn);
+  }
+  .chip-ink {
+    background: var(--pill-bg);
+    border-color: var(--pill-bg);
+    color: #fff;
+  }
+
+  .tabs {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    border-radius: 999px;
+    border: 1px solid var(--rule-soft);
+    background: rgba(255, 255, 255, 0.6);
+  }
+  .tab {
+    height: 32px;
+    padding: 0 16px;
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 500;
+    letter-spacing: -0.006em;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.25s var(--ease), background 0.25s var(--ease);
+  }
+  .tab:hover {
+    color: var(--ink);
+  }
+  .tab-on {
+    background: var(--pill-bg);
+    color: #fff;
+  }
+
+  .bar {
+    height: 5px;
+    border-radius: 999px;
+    background: rgba(13, 12, 11, 0.1);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--ink);
+  }
+
+  .alert-danger {
+    background: var(--danger-soft);
+    border: 1px solid rgba(168, 51, 42, 0.24);
+    color: #7d251d;
+    border-radius: 10px;
+  }
+  .alert-warn {
+    background: var(--warn-soft);
+    border: 1px solid rgba(138, 100, 32, 0.22);
+    color: #6d4f19;
+    border-radius: 10px;
+  }
+  .alert-live {
+    background: var(--live-soft);
+    border: 1px solid rgba(26, 127, 75, 0.24);
+    color: #14603a;
+    border-radius: 10px;
+  }
+
+  .link {
+    color: var(--ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color 0.25s var(--ease), border-color 0.25s var(--ease);
+  }
+  .link:hover {
+    color: var(--ink);
+    border-bottom-color: var(--rule);
+  }
+}
+
+@utility pos {
+  color: var(--live);
+}
+@utility neg {
+  color: var(--danger);
+}
+@utility warnc {
+  color: var(--warn);
 }

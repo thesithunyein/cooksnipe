@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ExternalLink } from 'lucide-react';
 import { fetchConfig } from '../lib/api';
-import { COOKIE_EXPLORER } from '../lib/chain';
 import { poolStats } from '../lib/curve';
 import type { PricePoint } from './BondingChart';
 import { Claims } from './Claims';
@@ -13,6 +11,12 @@ import { useWallet } from './useWallet';
 import { WalletButton } from './WalletButton';
 
 type Tab = 'radar' | 'portfolio' | 'claims';
+
+const TABS: Array<[Tab, string]> = [
+  ['radar', 'Radar'],
+  ['portfolio', 'Portfolio'],
+  ['claims', 'Claims'],
+];
 
 export function AppView() {
   const feed = useLaunches();
@@ -40,7 +44,6 @@ export function AppView() {
     [feed.launches, selectedPubkey],
   );
 
-  // Reset the price history when switching tokens or toggling demo mode.
   useEffect(() => {
     setHistory([]);
   }, [selectedPubkey, feed.demoMode]);
@@ -66,40 +69,26 @@ export function AppView() {
   };
 
   return (
-    <div className="fixed inset-0 bg-black text-white flex flex-col">
-      {/* Top bar */}
-      {/* Wraps to two rows on narrow screens rather than squeezing the tabs into
-          each other — a shrunk flex item keeps its padding and overflows its text. */}
-      <header className="shrink-0 border-b border-white/10 bg-black flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2.5 sm:px-6 sm:h-16 sm:py-0">
-        <button
-          onClick={() => goTab('radar')}
-          className="flex items-center gap-2.5 cursor-pointer min-w-0"
-          title="CookSnipe"
-        >
+    <div className="fixed inset-0 flex flex-col" style={{ background: 'var(--paper)' }}>
+      {/* Chrome — fixed, paper, hairline under it */}
+      <header className="shrink-0 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 sm:px-8 py-3 sm:py-4 hair-b">
+        <button onClick={() => goTab('radar')} className="flex items-center gap-2.5 cursor-pointer min-w-0">
           <img
             src="/cooksnipe.png"
-            alt="CookSnipe"
-            className="w-9 h-9 rounded-full ring-1 ring-white/15 shadow-[0_0_22px_rgba(255,60,110,0.35)]"
+            alt=""
+            className="w-9 h-9 rounded-full"
             draggable={false}
           />
-          <span className="text-[15px] font-semibold tracking-tight hidden sm:inline">CookSnipe</span>
+          <span className="text-[15px] font-medium tracking-[-0.012em] hidden sm:inline">CookSnipe</span>
         </button>
 
-        <div className="flex items-center gap-3 min-w-0 flex-wrap justify-end">
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-full p-0.5 shrink-0">
-            {(
-              [
-                ['radar', 'Radar'],
-                ['portfolio', 'Portfolio'],
-                ['claims', 'Claims'],
-              ] as Array<[Tab, string]>
-            ).map(([id, label]) => (
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <div className="tabs shrink-0">
+            {TABS.map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => goTab(id)}
-                className={`px-3.5 sm:px-4 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-colors ${
-                  tab === id ? 'bg-white text-black' : 'text-white/55 hover:text-white'
-                }`}
+                className={`tab ${tab === id ? 'tab-on' : ''}`}
               >
                 {label}
               </button>
@@ -110,13 +99,13 @@ export function AppView() {
             <select
               value={feed.pollMs}
               onChange={(e) => feed.setPollMs(Number(e.target.value))}
-              className="hidden sm:block bg-white/5 border border-white/10 rounded px-2.5 py-2 text-[11px] text-white/70 outline-none cursor-pointer"
-              title="Poll interval"
+              aria-label="Poll interval"
+              className="hidden sm:block h-9 rounded-full border border-[color:var(--rule)] bg-white/60 px-3 text-[12px] text-[color:var(--ink-soft)] outline-none cursor-pointer"
             >
-              <option value={3000} className="bg-black">3s</option>
-              <option value={5000} className="bg-black">5s</option>
-              <option value={10000} className="bg-black">10s</option>
-              <option value={30000} className="bg-black">30s</option>
+              <option value={3000}>every 3s</option>
+              <option value={5000}>every 5s</option>
+              <option value={10000}>every 10s</option>
+              <option value={30000}>every 30s</option>
             </select>
           )}
 
@@ -126,25 +115,25 @@ export function AppView() {
 
       {/* Status lines — only when something is actually wrong or unusual */}
       {feed.demoMode && (
-        <div className="shrink-0 bg-purple-500/15 border-b border-purple-500/20 px-4 sm:px-6 py-2 text-[11px] text-purple-300 flex items-center gap-2">
-          <span className="font-bold">DEMO MODE</span>
-          <span className="text-purple-300/80">Simulated launches — trading is disabled.</span>
+        <div className="shrink-0 alert-warn mx-5 sm:mx-8 mt-3 px-3.5 py-2 text-[11.5px] flex items-center gap-2">
+          <span className="font-medium">Demo mode</span>
+          <span className="opacity-80">Simulated launches — trading is disabled.</span>
         </div>
       )}
       {!feed.demoMode && feed.status === 'error' && (
-        <div className="shrink-0 bg-red-500/15 border-b border-red-500/20 px-4 sm:px-6 py-2 text-[11px] text-red-300">
-          Launchpad API unreachable ({feed.error}). The radar will keep retrying every {feed.pollMs / 1000}s.
+        <div className="shrink-0 alert-danger mx-5 sm:mx-8 mt-3 px-3.5 py-2 text-[11.5px]">
+          Launchpad API unreachable ({feed.error}). Retrying every {feed.pollMs / 1000}s.
         </div>
       )}
       {!feed.demoMode && feed.status === 'live' && feed.skipped > 0 && (
-        <div className="shrink-0 bg-amber-500/10 border-b border-amber-500/20 px-4 sm:px-6 py-1.5 text-[10.5px] text-amber-300/90">
+        <div className="shrink-0 mx-5 sm:mx-8 mt-3 px-3.5 py-2 text-[11px] text-[color:var(--ink-faint)] hair-b pb-3">
           The launchpad API could not decode {feed.skipped} pool{feed.skipped === 1 ? '' : 's'} in this response, so they
           are missing below. Pool detail is still reachable by address.
         </div>
       )}
 
       {/* Body */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden mt-4">
         {selected ? (
           <TokenDetail
             pool={selected}
@@ -153,6 +142,7 @@ export function AppView() {
             wallet={wallet}
             onBack={() => setSelectedPubkey(null)}
             onTraded={feed.refresh}
+            onOpenClaims={() => goTab('claims')}
           />
         ) : tab === 'portfolio' ? (
           <Portfolio feed={feed} wallet={wallet} onOpenPool={(p) => setSelectedPubkey(p.pubkey)} />
@@ -174,21 +164,21 @@ export function AppView() {
         )}
       </div>
 
-      {/* Network strip — where every number on this screen came from */}
-      <footer className="shrink-0 h-8 border-t border-white/10 bg-black px-4 sm:px-6 flex items-center justify-between text-[10px] text-white/35">
-        <span className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#3ddc84]" />
+      {/* Footer — where every number on this screen came from */}
+      <footer className="shrink-0 hair-t px-5 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[10.5px] tracking-[0.02em] text-[color:var(--ink-faint)]">
+        <span className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--live)' }} />
           Cookie Chain · rpc.cookiescan.io
         </span>
-        <span className="flex items-center gap-3">
-          <a href="https://cookiescan.io" target="_blank" rel="noreferrer" className="hover:text-white inline-flex items-center gap-1">
-            Cookiescan <ExternalLink size={9} />
+        <span className="flex items-center gap-4">
+          <a href="https://cookiescan.io" target="_blank" rel="noreferrer" className="link">
+            Cookiescan
           </a>
-          <a href="https://hyperlane.cookiescan.io" target="_blank" rel="noreferrer" className="hover:text-white inline-flex items-center gap-1">
-            Bridge <ExternalLink size={9} />
+          <a href="https://hyperlane.cookiescan.io" target="_blank" rel="noreferrer" className="link">
+            Bridge
           </a>
-          <a href={COOKIE_EXPLORER} target="_blank" rel="noreferrer" className="hover:text-white hidden sm:inline-flex items-center gap-1">
-            Explorer <ExternalLink size={9} />
+          <a href="https://cookiescan.io" target="_blank" rel="noreferrer" className="link hidden sm:inline">
+            Explorer
           </a>
         </span>
       </footer>

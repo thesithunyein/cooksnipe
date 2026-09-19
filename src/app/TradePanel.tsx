@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, ArrowDownUp, Check, ExternalLink, Loader2, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { buildBuyTx, buildSellTx, fetchPosition } from '../lib/api';
 import { estimateBuy, estimateSell } from '../lib/curve';
 import { explorerTx } from '../lib/chain';
@@ -24,13 +24,13 @@ function StageRow({ status, detail, label }: { status?: StageStatus; detail?: st
   return (
     <div className="flex items-start gap-2.5 text-[12px]">
       <span className="w-4 h-4 mt-[2px] shrink-0 flex items-center justify-center">
-        {status === 'ok' && <Check size={13} className="text-[#3ddc84]" />}
-        {status === 'fail' && <X size={13} className="text-red-400" />}
-        {status === 'start' && <Loader2 size={13} className="text-white/60 animate-spin" />}
+        {status === 'ok' && <Check size={12} strokeWidth={2} style={{ color: 'var(--live)' }} />}
+        {status === 'fail' && <X size={12} strokeWidth={2} style={{ color: 'var(--danger)' }} />}
+        {status === 'start' && <Loader2 size={11} className="animate-spin opacity-55" />}
       </span>
       <span className="min-w-0">
-        <span className={status ? 'text-white/85' : 'text-white/30'}>{label}</span>
-        {detail && <span className="block text-[10.5px] text-white/40 mt-0.5 break-words">{detail}</span>}
+        <span className={status ? '' : 'text-[color:var(--ink-faint)]'}>{label}</span>
+        {detail && <span className="block text-[10.5px] text-[color:var(--ink-faint)] mt-0.5 break-words">{detail}</span>}
       </span>
     </div>
   );
@@ -158,10 +158,10 @@ export function TradePanel({ pool, wallet, onDone }: TradePanelProps) {
   });
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4">
-      <div className="flex items-center justify-between mb-3.5">
-        <div className="text-[11px] uppercase tracking-[0.2em] text-white/45">Trade</div>
-        <div className="flex items-center bg-white/5 border border-white/10 rounded-full p-0.5">
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <span className="label">Trade</span>
+        <div className="tabs">
           {(['buy', 'sell'] as Mode[]).map((m) => (
             <button
               key={m}
@@ -170,9 +170,7 @@ export function TradePanel({ pool, wallet, onDone }: TradePanelProps) {
                 setAmount('');
                 tx.reset();
               }}
-              className={`px-3.5 py-1.5 rounded-full text-[11px] font-semibold capitalize cursor-pointer transition-colors ${
-                mode === m ? 'bg-white text-black' : 'text-white/55 hover:text-white'
-              }`}
+              className={`tab capitalize ${mode === m ? 'tab-on' : ''}`}
             >
               {m}
             </button>
@@ -181,22 +179,22 @@ export function TradePanel({ pool, wallet, onDone }: TradePanelProps) {
       </div>
 
       {position && (
-        <div className="mb-3 flex items-center justify-between text-[11px] text-white/50">
+        <div className="mb-3 flex items-center justify-between text-[11.5px] text-[color:var(--ink-soft)]">
           <span>Your curve shares</span>
-          <span className="text-white/80">
+          <span className="num">
             {posLoading ? '…' : sharesUi.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${pool.symbol}
           </span>
         </div>
       )}
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         <div className="flex-1 relative">
           <input
             inputMode="decimal"
             placeholder={mode === 'buy' ? 'COOK to spend' : `$${pool.symbol} shares to sell`}
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-            className="w-full bg-black/40 border border-white/10 rounded px-3.5 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-[#3ddc84]/50"
+            className="field num pr-24"
           />
           {mode === 'sell' && position && sharesUi > 0 && (
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
@@ -204,21 +202,21 @@ export function TradePanel({ pool, wallet, onDone }: TradePanelProps) {
                 <button
                   key={f}
                   onClick={() => setAmount((sharesUi * f).toString())}
-                  className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-white/70 hover:bg-white/20 cursor-pointer"
+                  className="px-2 py-1 rounded-full border border-[color:var(--rule-soft)] text-[10px] text-[color:var(--ink-soft)] hover:bg-[rgba(13,12,11,0.04)] cursor-pointer num"
                 >
-                  {f === 1 ? 'MAX' : `${f * 100}%`}
+                  {f === 1 ? 'max' : `${f * 100}%`}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <span className="text-[12px] text-white/45 w-14 shrink-0">{mode === 'buy' ? 'COOK' : 'shares'}</span>
+        <span className="text-[12px] text-[color:var(--ink-faint)] w-14 shrink-0">{mode === 'buy' ? 'COOK' : 'shares'}</span>
       </div>
 
       {quote && !issue && (
-        <div className="mt-3 text-[12px] text-white/75 space-y-1 border-t border-white/5 pt-3">
+        <div className="mt-4 pt-3.5 border-t border-[color:var(--rule-soft)] space-y-1.5 text-[12.5px] num">
           <div className="flex justify-between">
-            <span className="text-white/45">{mode === 'buy' ? `You receive (est.)` : 'You receive (est.)'}</span>
+            <span className="text-[color:var(--ink-soft)]">You receive (est.)</span>
             <span>
               {mode === 'buy'
                 ? `${quote.outTokens.toLocaleString(undefined, { maximumFractionDigits: 0 })} $${pool.symbol}`
@@ -226,63 +224,53 @@ export function TradePanel({ pool, wallet, onDone }: TradePanelProps) {
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-white/45">Trade fee ({(feeBps / 100).toFixed(2)}%)</span>
-            <span>{quote.feeCook.toFixed(6)} COOK</span>
+            <span className="text-[color:var(--ink-soft)]">Trade fee ({(feeBps / 100).toFixed(2)}%)</span>
+            <span className="text-[color:var(--ink-soft)]">{quote.feeCook.toFixed(6)} COOK</span>
           </div>
         </div>
       )}
 
       {(blocked || issue) && (
-        <div className="mt-3 flex items-start gap-2 text-[11px] text-amber-300/90">
-          <AlertTriangle size={12} className="mt-[2px] shrink-0" />
+        <div className="mt-3.5 flex items-start gap-2.5 text-[11.5px] alert-warn px-3 py-2.5">
+          <span className="mt-[6px] w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--warn)' }} />
           <span>{issue ?? blocked}</span>
         </div>
       )}
 
-      <button
-        onClick={() => void submit()}
-        disabled={!canSubmit}
-        className="mt-3.5 w-full flex items-center justify-center gap-2 rounded-lg bg-[#3ddc84] text-black py-2.5 text-[12.5px] font-semibold hover:bg-[#54e79b] transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-default"
-      >
-        {tx.busy ? <Loader2 size={14} className="animate-spin" /> : <ArrowDownUp size={14} />}
+      <button onClick={() => void submit()} disabled={!canSubmit} className="btn btn-ink w-full mt-4">
+        {tx.busy ? <Loader2 size={14} className="animate-spin" /> : null}
         {tx.busy ? 'Working…' : mode === 'buy' ? `Buy $${pool.symbol}` : `Sell $${pool.symbol}`}
       </button>
 
       {(tx.busy || tx.error || tx.result) && (
-        <div className="mt-3.5 border-t border-white/5 pt-3.5 space-y-2">
+        <div className="mt-4 pt-4 border-t border-[color:var(--rule-soft)] space-y-2">
           {VISIBLE_STAGES.map((s) => (
             <StageRow key={s.stage} {...stageState(s.stage)} label={s.label} />
           ))}
 
-          {tx.error && (
-            <div className="mt-2 rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-300 leading-relaxed">
-              {tx.error}
-            </div>
-          )}
+          {tx.error && <div className="alert-danger px-3 py-2.5 text-[11.5px] leading-relaxed">{tx.error}</div>}
 
           {tx.result && (
-            <div className="mt-2 rounded border border-[#3ddc84]/30 bg-[#3ddc84]/10 px-3 py-2 text-[11px] text-[#3ddc84]">
-              <div className="flex items-center gap-1.5 font-semibold">
-                <Check size={12} /> Confirmed on Cookie Chain
-              </div>
+            <div className="alert-live px-3 py-2.5 text-[11.5px]">
+              <div className="font-medium">Confirmed on Cookie Chain</div>
               <a
                 href={explorerTx(tx.result.signature)}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-flex items-center gap-1 break-all hover:underline"
+                className="mt-1 inline-block break-all underline decoration-[rgba(20,96,58,0.35)] hover:decoration-[#14603a]"
               >
-                {tx.result.signature.slice(0, 20)}… <ExternalLink size={10} className="shrink-0" />
+                {tx.result.signature}
               </a>
             </div>
           )}
         </div>
       )}
 
-      <div className="mt-3 text-[10px] text-white/35 leading-relaxed">
-        You sign an unsigned transaction built by the launchpad API; CookSnipe verifies every instruction against the
-        description it returned, simulates it, and broadcasts it over the Cookie Chain RPC itself — your wallet never
-        sends it to another chain.
-      </div>
+      <p className="mt-4 text-[10.5px] leading-relaxed text-[color:var(--ink-faint)]">
+        You sign an unsigned transaction built by the launchpad API. CookSnipe verifies every instruction against the
+        description that came back with it, simulates it, and broadcasts it over the Cookie Chain RPC itself — your wallet
+        never sends it to another chain.
+      </p>
     </div>
   );
 }

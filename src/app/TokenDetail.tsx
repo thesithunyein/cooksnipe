@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { ExternalLink, HandCoins } from 'lucide-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { BondingChart, CurveVisual, type PricePoint } from './BondingChart';
 import { DexExit } from './DexExit';
 import { poolStats } from '../lib/curve';
 import { explorerToken } from '../lib/chain';
-import { formatCook, formatPrice, formatTime, pct, shortAddr } from '../lib/format';
+import { formatCook, formatPrice, formatTime, pct } from '../lib/format';
 import type { LaunchRow } from '../lib/types';
 import { TradePanel } from './TradePanel';
 import type { WalletState } from './useWallet';
@@ -32,9 +32,11 @@ function hueOf(seed: string): number {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/8 bg-white/[0.02] px-3.5 py-2.5">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-white/40 mb-1.5">{label}</div>
-      <div className="text-[13px] text-white truncate" title={value}>{value}</div>
+    <div className="card px-3.5 py-3">
+      <div className="label mb-1.5">{label}</div>
+      <div className="text-[13.5px] truncate num" title={value}>
+        {value}
+      </div>
     </div>
   );
 }
@@ -69,50 +71,53 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 sm:px-6 py-4 border-b border-white/8 flex items-center gap-3.5">
-        <button onClick={onBack} className="text-white/50 hover:text-white text-[15px] cursor-pointer leading-none">←</button>
+      <div className="px-5 sm:px-8 pb-4 hair-b flex items-center gap-3.5">
+        <button onClick={onBack} aria-label="Back to the radar" className="opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+          <ArrowLeft size={17} strokeWidth={1.75} />
+        </button>
         <div
-          className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold text-black"
-          style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 70% 65%)` }}
+          className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
+          style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 62% 78%)` }}
         >
           {initials(pool.name)}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 min-w-0">
-            <h2 className="text-[16px] text-white truncate">{pool.name}</h2>
-            <span className="shrink-0 text-[12px] text-white/40">${pool.symbol}</span>
-            {pool.demo && (
-              <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-purple-400/20 text-purple-300 font-bold">DEMO</span>
-            )}
-            <span className={`shrink-0 text-[10px] px-1.5 py-0.5 rounded ${pool.status === 'live' ? 'bg-[#3ddc84]/20 text-[#3ddc84]' : 'bg-white/10 text-white/60'}`}>
-              {pool.status.toUpperCase()}
-            </span>
+            <h2 className="text-[17px] font-medium tracking-[-0.016em] truncate">{pool.name}</h2>
+            <span className="shrink-0 text-[12px] text-[color:var(--ink-faint)]">${pool.symbol}</span>
+            {pool.demo && <span className="chip shrink-0">demo</span>}
+            <span className={`chip shrink-0 ${pool.status === 'live' ? 'chip-live' : ''}`}>{pool.status}</span>
           </div>
-          <div className="flex items-center gap-2 mt-1 text-[11px] text-white/40">
-            <a href={`https://momoswap.fun/pool/${pool.pubkey}`} target="_blank" rel="noreferrer" className="hover:text-white">MomoSwap</a>
-            <span>·</span>
-            <a href={explorerToken(pool.tokenMint)} target="_blank" rel="noreferrer" className="hover:text-white inline-flex items-center gap-1">
-              token <ExternalLink size={9} />
+          <div className="flex items-center gap-2.5 mt-1 text-[11.5px] text-[color:var(--ink-faint)]">
+            <a href={`https://momoswap.fun/pool/${pool.pubkey}`} target="_blank" rel="noreferrer" className="link">
+              MomoSwap
             </a>
-            <span>·</span>
-            <a href={`https://cookiescan.io/address/${pool.creator}`} target="_blank" rel="noreferrer" className="hover:text-white">creator {shortAddr(pool.creator)}</a>
+            <span className="text-[color:var(--rule)]">·</span>
+            <a href={explorerToken(pool.tokenMint)} target="_blank" rel="noreferrer" className="link inline-flex items-center gap-1">
+              token <ExternalLink size={10} strokeWidth={1.75} />
+            </a>
+            <span className="text-[color:var(--rule)]">·</span>
+            <a href={`https://cookiescan.io/address/${pool.creator}`} target="_blank" rel="noreferrer" className="link">
+              creator
+            </a>
           </div>
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 py-5 flex flex-col gap-6 max-w-[900px] w-full mx-auto">
+      <div className="px-5 sm:px-8 py-5 flex flex-col gap-7 max-w-[880px] w-full mx-auto">
         {/* Price */}
         <div>
-          <div className="flex items-end gap-2.5">
-            <span className="text-[30px] leading-none text-white tracking-tight">{formatPrice(price)}</span>
-            <span className="text-[13px] text-white/40 mb-1">COOK / token</span>
+          <div className="flex items-end gap-3 flex-wrap">
+            <span className="text-[clamp(34px,6vw,58px)] leading-[0.95] tracking-[-0.036em] num">{formatPrice(price)}</span>
+            <span className="text-[13px] text-[color:var(--ink-faint)] mb-1.5">COOK / token</span>
             {changePct !== null && (
-              <span className={`text-[12px] mb-1 ${changePct >= 0 ? 'text-[#3ddc84]' : 'text-red-400'}`}>
-                {changePct >= 0 ? '+' : ''}{changePct.toFixed(1)}%
+              <span className={`text-[12.5px] mb-1.5 num ${changePct >= 0 ? 'pos' : 'neg'}`}>
+                {changePct >= 0 ? '+' : ''}
+                {changePct.toFixed(1)}%
               </span>
             )}
           </div>
-          <div className="text-[11px] text-white/40 mt-1.5">
+          <div className="text-[11.5px] text-[color:var(--ink-faint)] mt-2">
             launched {formatTime(pool.launchTs)} · ends {formatTime(pool.endTs)}
           </div>
         </div>
@@ -125,17 +130,17 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
           <Stat label="Trade fee" value={`${(tradeFeeBps / 100).toFixed(2)}%`} />
         </div>
 
-        {/* Graduation progress */}
+        {/* Graduation progress — monochrome bar, like the rest of the chrome */}
         <div>
-          <div className="flex justify-between text-[11px] text-white/45 mb-2">
-            <span>Graduation progress</span>
-            <span>{pct(progress)}</span>
+          <div className="flex justify-between items-baseline mb-2">
+            <span className="label">Graduation progress</span>
+            <span className="text-[12px] num">{pct(progress)}</span>
           </div>
-          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-[#3ddc84] to-[#a3ffcb]" style={{ width: `${Math.max(2, progress)}%` }} />
+          <div className="bar">
+            <i style={{ width: `${Math.max(2, progress)}%` }} />
           </div>
-          <div className="text-[10px] text-white/40 mt-1.5">
-            target: {formatCook(pool.graduationTarget)} COOK raised · sale supply: {formatCook(pool.saleTokenSupply, 6)} tokens
+          <div className="text-[10.5px] text-[color:var(--ink-faint)] mt-2 num">
+            target {formatCook(pool.graduationTarget)} COOK raised · sale supply {formatCook(pool.saleTokenSupply, 6)} tokens
           </div>
         </div>
 
@@ -144,11 +149,8 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
         {pool.status === 'graduated' && <DexExit pool={pool} wallet={wallet} onDone={onTraded} />}
 
         {onOpenClaims && (
-          <button
-            onClick={onOpenClaims}
-            className="flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/[0.02] py-2.5 text-[12px] text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors cursor-pointer"
-          >
-            <HandCoins size={13} /> Looking for a refund, a payout or creator fees? Open the Claim Center
+          <button onClick={onOpenClaims} className="btn btn-ghost w-full">
+            Looking for a refund, a payout or creator fees? Open the Claim Center
           </button>
         )}
 
@@ -158,14 +160,15 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
 
         {/* Safety */}
         <div>
-          <div className="text-[11px] uppercase tracking-[0.2em] text-white/45 mb-2.5">Safety checks</div>
-          <div className="flex flex-col gap-2">
+          <div className="label mb-3">Safety checks</div>
+          <div className="flex flex-col gap-2.5">
             {safety.map((s) => (
-              <div key={s.label} className="flex items-start gap-2.5 text-[12px]">
-                <span className={`mt-[3px] w-4 h-4 rounded-full flex items-center justify-center text-[9px] shrink-0 ${s.ok ? 'bg-[#3ddc84]/20 text-[#3ddc84]' : 'bg-amber-400/20 text-amber-300'}`}>
-                  {s.ok ? '✓' : '!'}
-                </span>
-                <span className="text-white/65">{s.label}</span>
+              <div key={s.label} className="flex items-start gap-3 text-[12.5px]">
+                <span
+                  className="mt-[5px] w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ background: s.ok ? 'var(--live)' : 'var(--warn)' }}
+                />
+                <span className="text-[color:var(--ink-soft)]">{s.label}</span>
               </div>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertTriangle, Check, ExternalLink, Loader2, RefreshCw, Search } from 'lucide-react';
+import { Check, ExternalLink, Loader2 } from 'lucide-react';
 import {
   buildClaimCreatorFeesTx,
   buildClaimTx,
@@ -173,10 +173,8 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
             /* fees endpoint unavailable for this pool */
           }
 
-          const vestRemaining = Math.max(
-            0,
-            cookUi(BigInt(pool.creatorVestAmount || '0') - BigInt(pool.creatorVestClaimed || '0')),
-          );
+          const vestRaw = BigInt(pool.creatorVestAmount || '0') - BigInt(pool.creatorVestClaimed || '0');
+          const vestRemaining = Math.max(0, cookUi(vestRaw));
           const now = Date.now() / 1000;
           if (vestRemaining > 0 && now >= pool.creatorVestStart) {
             found.push({
@@ -218,9 +216,7 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
           }),
     );
     if (sent) {
-      setScan((prev) =>
-        prev ? { ...prev, obligations: prev.obligations.filter((x) => x.key !== o.key) } : prev,
-      );
+      setScan((prev) => (prev ? { ...prev, obligations: prev.obligations.filter((x) => x.key !== o.key) } : prev));
     }
     setClaimingKey(null);
     return Boolean(sent);
@@ -236,93 +232,81 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-6 py-5 border-b border-white/8">
-        <div className="text-[11px] uppercase tracking-[0.2em] text-white/55 mb-1">Claim center</div>
-        <p className="text-[11.5px] text-white/40 mb-3.5 leading-relaxed max-w-[62ch]">
+      <div className="px-5 sm:px-8 pb-4 shrink-0">
+        <div className="label mb-1.5">Claim center</div>
+        <p className="text-[12.5px] leading-relaxed text-[color:var(--ink-soft)] max-w-[68ch] mb-4">
           Refunds, settlement payouts, graduated tokens and creator earnings don't announce themselves — the launchpad
-          shows a pool, an explorer shows an account, and your balance shows nothing until you claim. This scans every
-          pool and puts what you're owed in one list.
+          shows a pool, an explorer shows an account, and your balance shows nothing until you claim. This scans every pool
+          and puts what you're owed in one list.
         </p>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <input
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && void runScan()}
             placeholder="Cookie Chain wallet address"
             spellCheck={false}
-            className="flex-1 bg-black/40 border border-white/10 rounded px-3.5 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-[#3ddc84]/50"
+            className="field flex-1"
           />
           <button
             onClick={() => void runScan()}
             disabled={scanning || !scanAddress}
-            className="flex items-center gap-2 px-4 py-2.5 rounded bg-white text-black text-[12px] font-semibold disabled:opacity-40 cursor-pointer hover:bg-white/90 transition-colors"
+            className="btn btn-ink btn-sm h-[42px]"
           >
-            {scanning ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+            {scanning ? <Loader2 size={13} className="animate-spin" /> : null}
             {scanning ? 'Scanning…' : 'Scan'}
           </button>
         </div>
         {wallet.address && wallet.address !== scanAddress && (
-          <button
-            onClick={() => setOwner(wallet.address as string)}
-            className="mt-2 text-[10.5px] text-[#3ddc84] hover:underline cursor-pointer"
-          >
+          <button onClick={() => setOwner(wallet.address as string)} className="link mt-2.5 text-[11px] cursor-pointer">
             Use connected wallet {shortAddr(wallet.address)}
           </button>
         )}
       </div>
 
-      {scanError && (
-        <div className="mx-6 mt-4 flex items-start gap-2 px-3.5 py-2.5 rounded border border-red-500/30 bg-red-500/10 text-[11px] text-red-300">
-          <AlertTriangle size={12} className="mt-[2px] shrink-0" />
-          {scanError}
-        </div>
-      )}
+      {scanError && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2.5 text-[11.5px]">{scanError}</div>}
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {!scan && !scanning && !scanError && (
-          <div className="px-6 py-16 text-center text-white/35 text-[12px]">
+          <div className="px-6 py-20 text-center text-[12.5px] text-[color:var(--ink-faint)]">
             Scan an address to see everything the launchpad owes it.
           </div>
         )}
 
         {scan && scan.obligations.length === 0 && (
-          <div className="px-6 py-16 text-center text-[12px] text-white/45">
-            <div className="text-[#3ddc84] text-[13px] font-semibold mb-1.5">Nothing to claim</div>
-            <div className="text-white/35">
+          <div className="px-6 py-20 text-center text-[12.5px]">
+            <div className="text-[15px] font-medium tracking-[-0.012em] mb-2">Nothing to claim</div>
+            <div className="text-[color:var(--ink-soft)] max-w-[46ch] mx-auto leading-relaxed">
               {scan.poolsChecked} pools checked · {scan.livePools} still live. This address is not owed any refund,
               payout, graduated tokens or creator fees.
             </div>
-            <div className="mt-1 text-[10.5px] text-white/25">
+            <div className="mt-2 text-[10.5px] text-[color:var(--ink-faint)] num">
               Scanned {new Date(scan.scannedAt).toLocaleTimeString()}
             </div>
           </div>
         )}
 
         {scan?.obligations.map((o) => (
-          <div key={o.key} className="px-6 py-4 flex items-start gap-4 border-b border-white/5 last:border-b-0">
+          <div key={o.key} className="px-5 sm:px-8 py-4 flex items-start gap-4 hair-b">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[13.5px] font-semibold text-white truncate">{o.pool.name}</span>
-                <span className="shrink-0 text-[11px] text-white/40">${o.pool.symbol}</span>
-                <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/55 uppercase">
-                  {o.pool.status}
-                </span>
+                <span className="text-[14.5px] font-medium tracking-[-0.012em] truncate">{o.pool.name}</span>
+                <span className="shrink-0 text-[11.5px] text-[color:var(--ink-faint)]">${o.pool.symbol}</span>
+                <span className="chip shrink-0">{o.pool.status}</span>
               </div>
-              <div className="mt-1 text-[11px] text-white/45">{o.reason}</div>
-              <div className="mt-0.5 text-[11px] text-white/60">{o.title}</div>
+              <div className="mt-1.5 text-[11.5px] text-[color:var(--ink-soft)]">{o.title}</div>
+              <div className="mt-0.5 text-[10.5px] text-[color:var(--ink-faint)]">{o.reason}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-[13px] text-white font-semibold whitespace-nowrap">
+              <div className="text-[13.5px] whitespace-nowrap num">
                 {o.amountCook === null ? (
-                  <span className="text-white/70">SPL {o.pool.symbol}</span>
+                  <span className="text-[color:var(--ink-soft)]">SPL {o.pool.symbol}</span>
                 ) : (
                   <>
                     {o.amountCook.toLocaleString(undefined, { maximumFractionDigits: 4 })}{' '}
-                    <span className="text-[10px] font-normal text-white/45">COOK</span>
+                    <span className="text-[10px] text-[color:var(--ink-faint)]">COOK</span>
                     {price && (
-                      <div className="text-[10px] font-normal text-white/35">
-                        ≈ ${(o.amountCook * price).toFixed(2)}
-                      </div>
+                      <div className="text-[10px] text-[color:var(--ink-faint)]">≈ ${(o.amountCook * price).toFixed(2)}</div>
                     )}
                   </>
                 )}
@@ -331,7 +315,7 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
                 onClick={() => void claim(o)}
                 disabled={!canClaim || tx.busy}
                 title={canClaim ? 'Sign the claim' : 'Connect this wallet to sign the claim'}
-                className="mt-1.5 px-3.5 py-1.5 rounded bg-[#3ddc84] text-black text-[11px] font-semibold hover:bg-[#54e79b] transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-default"
+                className="btn btn-ink btn-sm mt-2"
               >
                 {claimingKey === o.key && tx.busy ? 'Claiming…' : 'Claim'}
               </button>
@@ -341,11 +325,11 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
       </div>
 
       {(tx.busy || tx.error || tx.result) && (
-        <div className="shrink-0 border-t border-white/10 bg-white/[0.02] px-6 py-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-[0.18em] text-white/45">Claim progress</span>
+        <div className="shrink-0 hair-t px-5 sm:px-8 py-4 space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <span className="label">Claim progress</span>
             {tx.error && (
-              <span className="text-[11px] text-red-300 max-w-[52ch] truncate" title={tx.error}>
+              <span className="text-[11px] neg max-w-[52ch] truncate" title={tx.error}>
                 {tx.error}
               </span>
             )}
@@ -354,26 +338,27 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
                 href={explorerTx(tx.result.signature)}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[11px] text-[#3ddc84] inline-flex items-center gap-1 hover:underline"
+                className="text-[11px] link inline-flex items-center gap-1.5"
+                style={{ color: 'var(--live)' }}
               >
-                <Check size={11} /> confirmed on Cookiescan <ExternalLink size={10} />
+                <Check size={11} strokeWidth={2} /> confirmed on Cookiescan <ExternalLink size={10} strokeWidth={1.75} />
               </a>
             )}
           </div>
-          <div className="grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-1.5">
             {VISIBLE_STAGES.map((s) => {
               const status = tx.progress.status[s.stage];
               return (
-                <div key={s.stage} className="flex items-start gap-2 text-[11.5px]">
+                <div key={s.stage} className="flex items-start gap-2.5 text-[11.5px]">
                   <span className="w-3.5 h-3.5 mt-[2px] shrink-0 flex items-center justify-center">
-                    {status === 'ok' && <Check size={12} className="text-[#3ddc84]" />}
-                    {status === 'fail' && <span className="text-red-400 text-[11px]">×</span>}
-                    {status === 'start' && <Loader2 size={11} className="text-white/60 animate-spin" />}
+                    {status === 'ok' && <Check size={11} strokeWidth={2} style={{ color: 'var(--live)' }} />}
+                    {status === 'fail' && <span className="neg text-[11px]">×</span>}
+                    {status === 'start' && <Loader2 size={10} className="animate-spin opacity-55" />}
                   </span>
                   <span className="min-w-0">
-                    <span className={status ? 'text-white/80' : 'text-white/25'}>{s.label}</span>
+                    <span className={status ? '' : 'text-[color:var(--ink-faint)]'}>{s.label}</span>
                     {tx.progress.detail[s.stage] && (
-                      <span className="block text-[10px] text-white/40 break-words">
+                      <span className="block text-[10px] text-[color:var(--ink-faint)] break-words">
                         {tx.progress.detail[s.stage]}
                       </span>
                     )}
@@ -386,23 +371,23 @@ export function Claims({ wallet, initialAddress }: ClaimsProps) {
       )}
 
       {scan && scan.obligations.length > 0 && (
-        <div className="shrink-0 px-6 py-3.5 border-t border-white/10 bg-white/[0.02] flex items-center justify-between gap-4">
-          <span className="text-[12px] text-white/50">
-            {scan.obligations.length} claimable item{scan.obligations.length === 1 ? '' : 's'} across{' '}
-            {scan.poolsChecked} pools
+        <div className="shrink-0 hair-t px-5 sm:px-8 py-3.5 flex items-center justify-between gap-4">
+          <span className="text-[12px] text-[color:var(--ink-soft)] num">
+            {scan.obligations.length} claimable item{scan.obligations.length === 1 ? '' : 's'} across {scan.poolsChecked}{' '}
+            pools
           </span>
-          <div className="flex items-center gap-3">
-            <span className="text-[12px] font-semibold text-white whitespace-nowrap">
+          <div className="flex items-center gap-4">
+            <span className="text-[12.5px] font-medium whitespace-nowrap num">
               {claimableCook.toLocaleString(undefined, { maximumFractionDigits: 2 })} COOK
-              {price && <span className="text-white/40 font-normal"> ≈ ${(claimableCook * price).toFixed(2)}</span>}
+              {price && <span className="text-[color:var(--ink-faint)] font-normal"> ≈ ${(claimableCook * price).toFixed(2)}</span>}
             </span>
             <button
               onClick={() => void claimAll()}
               disabled={!canClaim || tx.busy}
               title={canClaim ? 'Claim everything in sequence' : 'Connect this wallet to sign'}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-[#3ddc84] text-black text-[11.5px] font-semibold hover:bg-[#54e79b] transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-default"
+              className="btn btn-ink btn-sm"
             >
-              <RefreshCw size={12} /> Claim all
+              Claim all
             </button>
           </div>
         </div>

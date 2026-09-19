@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Coins, ExternalLink, Loader2, Search } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { fetchPools, fetchPosition } from '../lib/api';
 import { COOK_MINT, explorerToken } from '../lib/chain';
 import { estimateSell } from '../lib/curve';
@@ -104,11 +104,7 @@ function valueOf(pool: LaunchRow, pos: LaunchpadPosition): { cook: number | null
     const total = Number(pool.totalExpiryShares || 0);
     const pot = Number(pool.expiryLiquidity || 0) / 1e9;
     const share = total > 0 ? (pot * Number(shares)) / total : 0;
-    return {
-      cook: share,
-      kind: 'claim',
-      note: pos.claimed ? 'refund claimed' : 'refund claimable',
-    };
+    return { cook: share, kind: 'claim', note: pos.claimed ? 'refund claimed' : 'refund claimable' };
   }
 
   return { cook: 0, kind: 'none', note: pool.expiryMode === 'dead' ? 'no refunds in dead mode' : 'closed' };
@@ -172,7 +168,10 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
       positions.map(({ pool, pos }) => {
         const raw = (() => {
           try {
-            return { invested: Number(BigInt(pos.totalPaymentIn || '0')) / 1e9, returned: Number(BigInt(pos.totalPaymentOut || '0')) / 1e9 };
+            return {
+              invested: Number(BigInt(pos.totalPaymentIn || '0')) / 1e9,
+              returned: Number(BigInt(pos.totalPaymentOut || '0')) / 1e9,
+            };
           } catch {
             return { invested: 0, returned: 0 };
           }
@@ -202,51 +201,40 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="px-4 sm:px-6 py-5 border-b border-white/8">
-        <div className="text-[11px] uppercase tracking-[0.2em] text-white/55 mb-3">Portfolio</div>
-        <div className="flex items-center gap-2.5">
+      <div className="px-5 sm:px-8 pb-4 shrink-0">
+        <div className="label mb-3">Portfolio</div>
+        <div className="flex items-center gap-3">
           <input
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && void load()}
             placeholder="Cookie Chain wallet address"
             spellCheck={false}
-            className="flex-1 bg-black/40 border border-white/10 rounded px-3.5 py-2.5 text-[13px] text-white placeholder-white/25 outline-none focus:border-[#3ddc84]/50"
+            className="field flex-1"
           />
-          <button
-            onClick={() => void load()}
-            disabled={loading || !owner.trim()}
-            className="flex items-center gap-2 px-4 py-2.5 rounded bg-white text-black text-[12px] font-semibold disabled:opacity-40 cursor-pointer hover:bg-white/90 transition-colors"
-          >
-            {loading ? <Loader2 size={13} className="animate-spin" /> : <Search size={13} />}
+          <button onClick={() => void load()} disabled={loading || !owner.trim()} className="btn btn-ink btn-sm h-[42px]">
+            {loading ? <Loader2 size={13} className="animate-spin" /> : null}
             {loading ? 'Loading…' : 'Load'}
           </button>
         </div>
-        <div className="text-[10px] text-white/35 mt-2 leading-relaxed">
+        <p className="text-[10.5px] text-[color:var(--ink-faint)] mt-2.5 leading-relaxed max-w-[70ch]">
           Curve positions are program-tracked shares, not SPL tokens. Invested and returned are read straight from the
           position account, so a closed position can't show a fake loss.
-        </div>
+        </p>
       </div>
 
-      {error && (
-        <div className="mx-4 sm:mx-6 mt-4 flex items-start gap-2 px-3.5 py-2.5 rounded border border-red-500/30 bg-red-500/10 text-[11px] text-red-300">
-          <AlertTriangle size={12} className="mt-[2px] shrink-0" />
-          {error}
-        </div>
-      )}
+      {error && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2.5 text-[11.5px]">{error}</div>}
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {!owner.trim() && (
-          <div className="px-6 py-16 text-center text-white/35 text-[12px]">
+          <div className="px-6 py-20 text-center text-[12.5px] text-[color:var(--ink-faint)]">
             Connect a wallet, or paste an address, to see its curve positions and PnL.
           </div>
         )}
 
         {owner.trim() && !loading && positions.length === 0 && !error && (
-          <div className="px-6 py-16 text-center text-white/35 text-[12px]">
-            {feed.demoMode
-              ? 'This address has no positions in the demo feed.'
-              : 'No curve positions in any pool for this address.'}
+          <div className="px-6 py-20 text-center text-[12.5px] text-[color:var(--ink-faint)]">
+            {feed.demoMode ? 'This address has no positions in the demo feed.' : 'No curve positions in any pool for this address.'}
           </div>
         )}
 
@@ -254,45 +242,41 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
           <button
             key={pool.pubkey}
             onClick={() => onOpenPool(pool)}
-            className="w-full text-left px-4 sm:px-6 py-4 flex items-center gap-4 border-b border-white/5 last:border-b-0 hover:bg-white/[0.03] transition-colors cursor-pointer"
+            className="w-full text-left px-5 sm:px-8 py-4 flex items-center gap-4 hair-b hover:bg-white/60 transition-colors cursor-pointer"
           >
             <div
-              className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
-              style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 70% 65%)` }}
+              className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
+              style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 62% 78%)` }}
             >
               {initials(pool.name)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[14px] font-semibold text-white truncate">{pool.name}</span>
-                <span className="shrink-0 text-[11px] text-white/40">${pool.symbol}</span>
-                {pool.demo && (
-                  <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-purple-400/20 text-purple-300 font-bold">DEMO</span>
-                )}
-                <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/50 uppercase">
-                  {pool.status}
-                </span>
+                <span className="text-[14.5px] font-medium tracking-[-0.012em] truncate">{pool.name}</span>
+                <span className="shrink-0 text-[11.5px] text-[color:var(--ink-faint)]">${pool.symbol}</span>
+                {pool.demo && <span className="chip shrink-0">demo</span>}
+                <span className="chip shrink-0">{pool.status}</span>
               </div>
-              <div className="mt-1 text-[11px] text-white/40 truncate">
+              <div className="mt-1 text-[11.5px] text-[color:var(--ink-soft)] truncate num">
                 {(Number(pos.shares) / 1e6).toLocaleString(undefined, { maximumFractionDigits: 0 })} shares · in{' '}
                 {formatCook(String(Math.round(invested * 1e9)))} COOK
                 {returned > 0 && <> · out {formatCook(String(Math.round(returned * 1e9)))} COOK</>}
               </div>
-              <div className="mt-0.5 text-[10.5px] text-white/35">{value.note}</div>
+              <div className="mt-0.5 text-[10.5px] text-[color:var(--ink-faint)]">{value.note}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-[13px] text-white font-semibold whitespace-nowrap">
+              <div className="text-[13.5px] whitespace-nowrap num">
                 {value.cook === null ? (
-                  <span className="text-white/70">SPL {pool.symbol}</span>
+                  <span className="text-[color:var(--ink-soft)]">SPL {pool.symbol}</span>
                 ) : (
                   <>
                     {value.cook.toLocaleString(undefined, { maximumFractionDigits: 2 })}{' '}
-                    <span className="text-[10px] font-normal text-white/45">COOK</span>
+                    <span className="text-[10px] text-[color:var(--ink-faint)]">COOK</span>
                   </>
                 )}
               </div>
               {invested > 0 && (
-                <div className={`mt-0.5 text-[11px] ${net >= 0 ? 'text-[#3ddc84]' : 'text-red-400'}`}>
+                <div className={`mt-0.5 text-[11.5px] num ${net >= 0 ? 'pos' : 'neg'}`}>
                   {net >= 0 ? '+' : ''}
                   {net.toLocaleString(undefined, { maximumFractionDigits: 2 })} net
                 </div>
@@ -302,33 +286,32 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
         ))}
 
         {assets !== null && (
-          <div className="px-4 sm:px-6 py-5 border-t border-white/8">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-white/45 mb-3">
-              <Coins size={12} /> Tokens in this wallet
-              <span className="text-white/25 normal-case tracking-normal">· Cookiescan DAS</span>
+          <div className="px-5 sm:px-8 py-6">
+            <div className="label mb-3.5">
+              Tokens in this wallet <span className="normal-case tracking-normal">· Cookiescan DAS</span>
             </div>
             {tokens.length === 0 ? (
-              <div className="text-[11px] text-white/35">
+              <div className="text-[11.5px] text-[color:var(--ink-faint)]">
                 The index shows no SPL or Token-2022 balances for this address yet.
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col">
                 {tokens.map((a) => (
-                  <div key={a.mint} className="flex items-center gap-3">
-                    <span className="flex-1 min-w-0 truncate text-[12px] text-white/75">
-                      {a.name} <span className="text-white/35">${a.symbol}</span>
+                  <div key={a.mint} className="flex items-center gap-3 py-2 hair-b last:border-b-0">
+                    <span className="flex-1 min-w-0 truncate text-[12.5px]">
+                      {a.name} <span className="text-[color:var(--ink-faint)]">${a.symbol}</span>
                     </span>
-                    <span className="text-[12px] text-white/85 whitespace-nowrap">
+                    <span className="text-[12.5px] whitespace-nowrap num">
                       {a.balance.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                     </span>
                     <a
                       href={explorerToken(a.mint)}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-white/30 hover:text-white shrink-0"
+                      className="opacity-35 hover:opacity-100 transition-opacity shrink-0"
                       title={a.mint}
                     >
-                      <ExternalLink size={11} />
+                      <ExternalLink size={12} strokeWidth={1.75} />
                     </a>
                   </div>
                 ))}
@@ -339,13 +322,13 @@ export function Portfolio({ feed, wallet, onOpenPool }: PortfolioProps) {
       </div>
 
       {rows.length > 0 && (
-        <div className="shrink-0 px-4 sm:px-6 py-3.5 border-t border-white/10 bg-white/[0.02] text-[12px] flex flex-wrap items-center justify-between gap-2">
-          <span className="text-white/50">
+        <div className="shrink-0 hair-t px-5 sm:px-8 py-3.5 text-[12px] flex flex-wrap items-center justify-between gap-2 num">
+          <span className="text-[color:var(--ink-soft)]">
             Open {formatCook(String(Math.round(totals.open * 1e9)))} COOK
             {totals.claims > 0 && <> · claimable {formatCook(String(Math.round(totals.claims * 1e9)))} COOK</>}
             {' · '}invested {formatCook(String(Math.round(totals.invested * 1e9)))}
           </span>
-          <span className={`font-semibold ${totals.net >= 0 ? 'text-[#3ddc84]' : 'text-red-400'}`}>
+          <span className={`font-medium ${totals.net >= 0 ? 'pos' : 'neg'}`}>
             {totals.net >= 0 ? '+' : ''}
             {formatCook(String(Math.round(totals.net * 1e9)))} COOK net
           </span>

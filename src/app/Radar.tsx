@@ -37,55 +37,49 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
     return [...launches].sort((a, b) => rank(a) - rank(b) || b.launchTs - a.launchTs);
   }, [launches]);
 
+  const liveCount = sorted.filter((l) => l.status === 'live').length;
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Pane header */}
-      <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-white/8">
-        <div className="flex items-center gap-2.5">
+      <div className="shrink-0 flex items-center justify-between gap-4 px-5 sm:px-8 pb-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           <span
-            className={`w-2 h-2 rounded-full ${
-              status === 'live' ? 'bg-[#3ddc84]' : status === 'error' ? 'bg-red-500' : 'bg-amber-400 animate-pulse'
+            className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+              status === 'live' ? '' : status === 'error' ? 'bg-[color:var(--danger)]' : 'animate-pulse bg-[color:var(--warn)]'
             }`}
+            style={status === 'live' ? { background: 'var(--live)' } : undefined}
           />
-          <span className="text-[11px] uppercase tracking-[0.2em] text-white/60">
+          <span className="label truncate">
             {status === 'connecting' ? 'Connecting…' : status === 'error' ? 'Feed error' : demoMode ? 'Demo feed' : 'Live feed'}
           </span>
-          {status === 'live' && !demoMode && launches.length > 0 && (
-            <span className="text-[11px] text-white/30">· {launches.filter((l) => l.status === 'live').length} live / {launches.length} total</span>
+          {status === 'live' && !demoMode && sorted.length > 0 && (
+            <span className="text-[11px] text-[color:var(--ink-faint)] num">
+              · {liveCount} live / {sorted.length} total
+            </span>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          {lastUpdated != null && <span className="text-[10px] text-white/30">{timeAgo(Math.floor(lastUpdated / 1000))}</span>}
-          <button
-            onClick={onRefresh}
-            className="text-[10px] text-white/50 hover:text-white transition-colors cursor-pointer"
-            title="Refresh now"
-          >
-            ⟳ refresh
+        <div className="flex items-center gap-4 shrink-0">
+          {lastUpdated != null && (
+            <span className="text-[10.5px] text-[color:var(--ink-faint)] num">{timeAgo(Math.floor(lastUpdated / 1000))}</span>
+          )}
+          <button onClick={onRefresh} className="text-[10.5px] text-[color:var(--ink-soft)] hover:text-[color:var(--ink)] transition-colors cursor-pointer">
+            refresh
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="mx-6 mt-4 px-3.5 py-2.5 rounded border border-red-500/30 bg-red-500/10 text-[11px] text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <div className="mx-5 sm:mx-8 mb-3 alert-danger px-3.5 py-2 text-[11.5px]">{error}</div>}
 
       {/* Launch list */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         {sorted.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center px-6 py-16 text-center">
-            <img
-              src="/cooksnipe.png"
-              alt=""
-              className="w-20 h-20 rounded-full ring-1 ring-white/10 shadow-[0_0_40px_rgba(255,60,110,0.3)]"
-              draggable={false}
-            />
-            <p className="mt-5 text-[15px] text-white/85">
+            <img src="/cooksnipe.png" alt="" className="w-16 h-16 rounded-full opacity-90" draggable={false} />
+            <p className="mt-5 text-[15px] tracking-[-0.012em]">
               {status === 'error' ? 'Radar offline' : demoMode ? 'Demo feed starting…' : 'Radar is quiet'}
             </p>
-            <p className="mt-2 text-[12px] text-white/45 leading-relaxed max-w-[340px]">
+            <p className="mt-2 text-[12px] leading-relaxed max-w-[38ch] text-[color:var(--ink-soft)]">
               {status === 'error'
                 ? 'Could not reach the MomoSwap launchpad API. It usually comes back — try a refresh.'
                 : demoMode
@@ -93,73 +87,58 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
                   : 'The launchpad is live and polling — no new launches on Cookie Chain right now.'}
             </p>
             {!demoMode && status !== 'error' && (
-              <button
-                onClick={onEnableDemo}
-                className="mt-6 px-5 py-2.5 rounded-full bg-purple-400/15 border border-purple-400/40 text-purple-300 text-[12px] font-semibold cursor-pointer hover:bg-purple-400/25 transition-colors"
-              >
-                ● See it with a demo feed
+              <button onClick={onEnableDemo} className="btn btn-ghost btn-sm mt-6">
+                See it with a demo feed
               </button>
             )}
           </div>
         )}
 
         {sorted.map((p) => {
-          const selected = p.pubkey === selectedPubkey;
           const isNew = newKeys.has(p.pubkey);
           const { price, progress, raised } = poolStats(p);
+          const selected = p.pubkey === selectedPubkey;
           return (
             <button
               key={p.pubkey}
               onClick={() => onSelect(p)}
-              className={`w-full text-left border-l-2 transition-colors cursor-pointer ${
-                selected ? 'bg-white/[0.05] border-l-[#3ddc84]' : 'border-l-transparent hover:bg-white/[0.02]'
+              className={`w-full text-left hair-b transition-colors cursor-pointer ${
+                selected ? 'bg-white' : 'hover:bg-white/60'
               }`}
             >
-              <div className="flex items-center gap-4 px-6 py-4">
+              <div className="flex items-center gap-4 px-5 sm:px-8 py-4">
                 <div
-                  className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold text-black"
-                  style={{ backgroundColor: `hsl(${hueOf(p.pubkey)} 70% 65%)` }}
+                  className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
+                  style={{ backgroundColor: `hsl(${hueOf(p.pubkey)} 62% 78%)` }}
                 >
                   {initials(p.name)}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[14px] font-semibold text-white truncate">{p.name}</span>
-                    <span className="shrink-0 text-[11px] text-white/40">${p.symbol}</span>
-                    {isNew && (
-                      <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-[#3ddc84]/20 text-[#3ddc84] font-bold">
-                        NEW
-                      </span>
-                    )}
+                    <span className="text-[14.5px] font-medium tracking-[-0.012em] truncate">{p.name}</span>
+                    <span className="shrink-0 text-[11.5px] text-[color:var(--ink-faint)]">${p.symbol}</span>
+                    {isNew && <span className="chip chip-ink shrink-0">new</span>}
                     {p.antiSnipe && p.status === 'live' && (
-                      <span className="hidden sm:inline shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 font-semibold">
-                        ANTI-SNIPE
-                      </span>
+                      <span className="chip chip-warn shrink-0 hidden sm:inline-flex">anti-snipe</span>
                     )}
-                    {p.status === 'graduated' && (
-                      <span className="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-white/60 font-semibold">
-                        GRADUATED
-                      </span>
-                    )}
+                    {p.status === 'graduated' && <span className="chip shrink-0">graduated</span>}
+                    {p.status === 'expired' && <span className="chip chip-warn shrink-0">expired</span>}
                   </div>
 
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
-                    <span className="text-[12px] text-white">{formatPrice(price)}</span>
-                    <span className="text-white/35">COOK</span>
-                    <span className="text-white/15">·</span>
-                    <span className="text-white/50">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11.5px] num">
+                    <span className="text-[12.5px]">{formatPrice(price)}</span>
+                    <span className="text-[color:var(--ink-faint)]">COOK</span>
+                    <span className="text-[color:var(--rule)]">·</span>
+                    <span className="text-[color:var(--ink-soft)]">
                       {raised > 0 ? `${formatCook(String(Math.round(raised * 1e9)))} COOK raised` : 'no sales yet'}
                     </span>
-                    <span className="text-white/15">·</span>
-                    <span className="text-white/50">{Number(p.participantCount || 0).toLocaleString()} buyers</span>
+                    <span className="text-[color:var(--rule)]">·</span>
+                    <span className="text-[color:var(--ink-soft)]">{Number(p.participantCount || 0).toLocaleString()} buyers</span>
                   </div>
 
-                  <div className="mt-2.5 h-1 w-full rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${progress >= 99 ? 'bg-[#3ddc84]' : 'bg-[#3ddc84]/75'}`}
-                      style={{ width: `${Math.max(2, progress)}%` }}
-                    />
+                  <div className="mt-2.5 bar">
+                    <i style={{ width: `${Math.max(2, progress)}%` }} />
                   </div>
                 </div>
               </div>
@@ -169,9 +148,9 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
       </div>
 
       {/* Footer strip */}
-      <div className="shrink-0 px-6 py-2.5 border-t border-white/8 text-[10px] text-white/30 flex items-center justify-between">
+      <div className="shrink-0 hair-t px-5 sm:px-8 py-2.5 text-[10.5px] text-[color:var(--ink-faint)] flex items-center justify-between">
         <span>{demoMode ? 'Simulated feed — for evaluation only' : 'MomoSwap launchpad · on-chain data'}</span>
-        <span>
+        <span className="num">
           {sorted.length} launch{sorted.length === 1 ? '' : 'es'}
         </span>
       </div>
