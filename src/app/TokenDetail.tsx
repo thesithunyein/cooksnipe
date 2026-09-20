@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { Suspense, lazy, useMemo } from 'react';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { BondingChart, CurveVisual, type PricePoint } from './BondingChart';
+import { CurveVisual, type PricePoint } from './BondingChart';
+import { verifiedLinks, type VerifiedToken } from '../lib/cookieswap';
 import { DexExit } from './DexExit';
 import { poolStats } from '../lib/curve';
 import { explorerToken } from '../lib/chain';
@@ -8,6 +9,23 @@ import { formatCook, formatPrice, formatTime, pct } from '../lib/format';
 import type { LaunchRow } from '../lib/types';
 import { TradePanel } from './TradePanel';
 import type { WalletState } from './useWallet';
+
+/** Loaded only when a pool is opened — see the Suspense boundary below. */
+const LiveChart = lazy(() => import('./LiveChart'));
+
+/** Same header and same 260px box as the real chart, so the swap is invisible. */
+function ChartFallback() {
+  return (
+    <div className="w-full">
+      <div className="flex items-center justify-between mb-2">
+        <span className="label">Live price · COOK / token</span>
+      </div>
+      <div className="h-[260px] flex items-center justify-center text-[12px] text-[color:var(--ink-faint)]">
+        Loading chart…
+      </div>
+    </div>
+  );
+}
 
 interface TokenDetailProps {
   pool: LaunchRow;
@@ -18,6 +36,8 @@ interface TokenDetailProps {
   /** Called after a confirmed transaction so the feed re-reads the pool. */
   onTraded: () => void;
   onOpenClaims?: () => void;
+  /** CookieSwap's record for this mint, when it has vetted the token. */
+  verified?: VerifiedToken;
 }
 
 function initials(name: string): string {
@@ -41,7 +61,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTraded, onOpenClaims }: TokenDetailProps) {
+export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTraded, onOpenClaims, verified }: TokenDetailProps) {
   const { price, raised, marketCap: mc, progress } = poolStats(pool);
 
   const changePct = useMemo(() => {
@@ -86,6 +106,11 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
             <h2 className="text-[17px] font-medium tracking-[-0.016em] truncate">{pool.name}</h2>
             <span className="shrink-0 text-[12px] text-[color:var(--ink-faint)]">${pool.symbol}</span>
             {pool.demo && <span className="chip shrink-0">demo</span>}
+            {verified && (
+              <span className="chip chip-live shrink-0" title="Listed in CookieSwap's verified-token registry">
+                verified
+              </span>
+            )}
             <span className={`chip shrink-0 ${pool.status === 'live' ? 'chip-live' : ''}`}>{pool.status}</span>
           </div>
           <div className="flex items-center gap-2.5 mt-1 text-[11.5px] text-[color:var(--ink-faint)]">
@@ -101,6 +126,30 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
               creator
             </a>
           </div>
+
+          {/*
+            CookieSwap's registry is the only reason this pool is distinguishable
+            from a throwaway launch, so its verdict is shown with the sources to
+            check it against. Every URL here is scheme-checked in lib/cookieswap
+            before it reaches an href: this is third-party data.
+          */}
+          {verified && (
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1.5 text-[11.5px] text-[color:var(--live)]">
+              <span>Verified by CookieSwap</span>
+              {verified.projectName && <span className="text-[color:var(--ink-faint)]">· {verified.projectName}</span>}
+              {verifiedLinks(verified).map((l) => (
+                <a
+                  key={l.label}
+                  href={l.url}
+                  target="_blank"
+                  rel="noreferrer nofollow"
+                  className="link text-[color:var(--ink-soft)]"
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -156,7 +205,15 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
 
         {/* Bonding curve */}
         <CurveVisual pool={pool} />
-        <BondingChart history={history} />
+        {/*
+          Lazy on purpose: lightweight-charts is the heaviest dependency in the
+          app and only this screen needs it, so it is fetched on the click that
+          opens a pool instead of shipped with the radar. The fallback keeps the
+          chart's header and its exact 260px box so nothing shifts when it lands.
+        */}
+        <Suspense fallback={<ChartFallback />}>
+          <LiveChart history={history} />
+        </Suspense>
 
         {/* Safety */}
         <div>

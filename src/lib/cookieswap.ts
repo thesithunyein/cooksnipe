@@ -49,9 +49,29 @@ export function alternateGateway(url: string): string {
   }
 }
 
-function clean(url?: string | null): string | null {
+/**
+ * Only `http`/`https` survive.
+ *
+ * Everything in this module is third-party data rendered straight into the DOM,
+ * so a URL from it is untrusted input: `javascript:` in an `href` is script
+ * execution, and `data:` can carry a document. Anything that is not plainly a
+ * web link is dropped rather than escaped, because there is no useful case for
+ * the alternatives here.
+ */
+export function safeUrl(url?: string | null): string | null {
   const v = (url ?? '').trim();
-  return v.length > 0 ? v : null;
+  if (v.length === 0) return null;
+  try {
+    const u = new URL(v);
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A logo can only be rendered if it resolves to a real web URL. */
+export function safeLogo(url?: string | null): string | null {
+  return safeUrl(url);
 }
 
 /**
@@ -67,21 +87,25 @@ export async function fetchVerifiedTokens(): Promise<Map<string, VerifiedToken>>
   const body = (await res.json()) as { tokens?: VerifiedToken[] };
   const map = new Map<string, VerifiedToken>();
   for (const t of body.tokens ?? []) {
-    if (t?.tokenMint) map.set(t.tokenMint, t);
+    // Sanitise once at the boundary so every consumer gets clean data.
+    if (t?.tokenMint) map.set(t.tokenMint, { ...t, logoUrl: safeLogo(t.logoUrl), bannerUrl: safeLogo(t.bannerUrl) });
   }
   return map;
 }
 
-/** The socials a verified token publishes, in the order worth showing. */
+/** The socials a verified token publishes, in the order worth showing.
+ *  Every URL is scheme-checked; anything unsafe is silently dropped. */
 export function verifiedLinks(t: VerifiedToken): Array<{ label: string; url: string }> {
+  const candidates: Array<[string, string | undefined]> = [
+    ['X', t.x],
+    ['website', t.website],
+    ['telegram', t.telegram],
+    ['discord', t.discord],
+  ];
   const out: Array<{ label: string; url: string }> = [];
-  const x = clean(t.x);
-  const site = clean(t.website);
-  const tg = clean(t.telegram);
-  const dc = clean(t.discord);
-  if (x) out.push({ label: 'X', url: x });
-  if (site) out.push({ label: 'site', url: site });
-  if (tg) out.push({ label: 'telegram', url: tg });
-  if (dc) out.push({ label: 'discord', url: dc });
+  for (const [label, raw] of candidates) {
+    const url = safeUrl(raw);
+    if (url) out.push({ label, url });
+  }
   return out;
 }

@@ -10,7 +10,7 @@ CookSnipe does all three in one screen, on chain.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-0d0c0b?style=flat-square)](LICENSE)
 [![CI](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml/badge.svg)](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-23%20passing-1a7f4b?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-36%20passing-1a7f4b?style=flat-square)](#testing)
 [![Network](https://img.shields.io/badge/network-Cookie%20Chain-0d0c0b?style=flat-square)](#cookie-chain-integration)
 [![Wallet](https://img.shields.io/badge/wallet-Nightly%20first-0d0c0b?style=flat-square)](#required-features-as-the-bounty-lists-them)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-0d0c0b?style=flat-square&logo=typescript&logoColor=ffffff)](tsconfig.json)
@@ -299,7 +299,7 @@ headers. Cookie DAS and the Cookiebox aggregator do send CORS headers, so they a
 | Command | What it does |
 |---|---|
 | `npm run dev` | Vite dev server, both routes, `/api` proxied to the launchpad |
-| `npm test` | Vitest: 23 unit tests over the curve math and the transaction verifier |
+| `npm test` | Vitest: 36 unit tests over the curve math, the transaction verifier and the CookieSwap client |
 | `npm run test:watch` | The same suite in watch mode |
 | `npm run build` | `tsc --noEmit && vite build` → `app.html` + `landing.html` |
 | `npm run preview` | Serve the production build on the same two routes |
@@ -314,9 +314,9 @@ cooksnipe/
 ├── vite.config.ts                two entries + the /api proxy for dev and preview
 ├── vercel.json                   the same routes + the /api rewrite in production
 ├── LICENSE                       MIT
-├── program/                      Rust claim-log program — built, not deployed (see above)
+├── program/                      Rust claim-log program — deployed on Cookie Chain (see above)
 │   ├── Cargo.toml                solana-program 2.1.21, with the edition2024 pins documented
-│   ├── src/lib.rs                one instruction: RecordClaim appends a receipt to a PDA
+│   ├── src/lib.rs                one instruction: RecordClaim appends a receipt to an account
 │   ├── deploy-program.mjs        builds, deploys via the Solana CLI, verifies, prints the address
 │   └── program-keypair.json      NOT COMMITTED — the program's secret key, gitignored
 ├── public/
@@ -338,7 +338,8 @@ cooksnipe/
     │   ├── wallet.ts             Wallet Standard + injected discovery, sign-only adapters
     │   ├── curve.ts              BigInt port of the on-chain bonding-curve rounding
     │   ├── cookiebox.ts          aggregator quotes and swap transactions
-    │   ├── cookieswap.ts         CookieSwap's verified-token registry + IPFS gateway fallback
+    │   ├── cookieswap.ts         CookieSwap's verified-token registry, URL scheme guard, IPFS fallback
+    │   ├── cookieswap.test.ts    the scheme guard, the social list, the gateway hop
     │   ├── das.ts                Cookiescan DAS assets + COOK price
     │   ├── types.ts              the shapes the API returns, in one place
     │   ├── format.ts             number, price and address formatting
@@ -351,7 +352,8 @@ cooksnipe/
         ├── Radar.tsx             the live pool feed, with CookieSwap's verified marks
         ├── useVerified.ts        loads CookieSwap's verified tokens once, never blocks the feed
         ├── TokenDetail.tsx       one pool: curve, stats, trade panel
-        ├── BondingChart.tsx      live price chart (lightweight-charts, paper palette)
+        ├── BondingChart.tsx      the SVG bonding curve, plus the PricePoint type
+        ├── LiveChart.tsx         the price chart, split out and lazy-loaded (see below)
         ├── TradePanel.tsx        buy and sell on the curve
         ├── DexExit.tsx           Cookiebox exit for graduated pools
         ├── Portfolio.tsx         positions and token balances for an address
@@ -366,13 +368,19 @@ State is deliberately plain: polling in `useLaunches`, wallet state in `useWalle
 in `useTx` — one pipeline, reused by every action, so the progress and error behaviour is identical
 everywhere.
 
+One deliberate split: `LiveChart.tsx` is imported lazily by `TokenDetail`. `lightweight-charts` is the
+heaviest dependency in the app and only the pool screen needs it, so bundling it with the radar meant
+every visitor downloaded a chart most never open. Splitting it took the initial chunk from 650 KB to
+495 KB (151 KB gzipped) and moved 173 KB to a chunk fetched on the click that opens a pool. The
+fallback keeps the chart's header and its exact 260px box, so nothing shifts when it arrives.
+
 ## Testing
 
 ```bash
 npm test
 ```
 
-23 tests across two files, aimed at the two places a wrong answer costs money:
+36 tests across three files, aimed at the places where a wrong answer costs money:
 
 - **`curve.test.ts`** — the bonding-curve math is a BigInt port of the on-chain rounding, checked
   against the reference implementation, including the fee split and the boundary cases at each end of
@@ -380,6 +388,10 @@ npm test
 - **`tx.test.ts`** — the verifier that stands between the API and your signature: a swapped program
   id, mutated instruction data, a different fee payer, an account that quietly became writable, and a
   description that does not match the bytes are all refused.
+- **`cookieswap.test.ts`** — the client for a third-party registry, so it is treated as untrusted
+  input: `javascript:` and `data:` URLs are dropped rather than passed into an `href`, a logo that
+  cannot be parsed is nulled, missing mints are skipped, and a failed endpoint throws so the caller
+  can decide instead of the radar silently showing unverified launches as verified.
 
 ## Deployment
 

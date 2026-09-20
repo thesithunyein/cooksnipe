@@ -235,6 +235,7 @@ export function AppView() {
             }}
             onTraded={feed.refresh}
             onOpenClaims={() => goTab('claims')}
+            verified={selected ? verified.get(selected.tokenMint) : undefined}
           />
         ) : tab === 'portfolio' ? (
           <Portfolio feed={feed} wallet={wallet} onOpenPool={(p) => setSelectedPubkey(p.pubkey)} />
