@@ -8,6 +8,7 @@ import { Portfolio } from './Portfolio';
 import { Radar } from './Radar';
 import { TokenDetail } from './TokenDetail';
 import { useLaunches } from './useLaunches';
+import { useVerified } from './useVerified';
 import { useWallet } from './useWallet';
 import { WalletButton } from './WalletButton';
 
@@ -25,6 +26,7 @@ const initialParams = () => new URLSearchParams(window.location.search);
 export function AppView() {
   const feed = useLaunches();
   const wallet = useWallet();
+  const verified = useVerified();
   const [params] = useState(initialParams);
   const [tab, setTab] = useState<Tab>(() => {
     const t = params.get('tab');
@@ -254,6 +256,7 @@ export function AppView() {
             lastUpdated={feed.lastUpdated}
             onRefresh={feed.refresh}
             onEnableDemo={() => feed.setDemoMode(true)}
+            verified={verified}
           />
         )}
       </div>

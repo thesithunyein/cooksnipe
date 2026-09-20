@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { poolStats } from '../lib/curve';
 import { Mark } from './Mark';
 import { formatCook, formatPrice, timeAgo } from '../lib/format';
+import { alternateGateway, type VerifiedToken } from '../lib/cookieswap';
 import type { LaunchRow } from '../lib/types';
 
 interface RadarProps {
@@ -15,6 +16,8 @@ interface RadarProps {
   lastUpdated: number | null;
   onRefresh: () => void;
   onEnableDemo: () => void;
+  /** CookieSwap's verified tokens by mint. Decoration: may be empty. */
+  verified?: Map<string, VerifiedToken>;
 }
 
 function initials(name: string): string {
@@ -41,7 +44,7 @@ function isTestLaunch(p: LaunchRow): boolean {
   return TEST_SYMBOL.test(p.symbol || '') || TEST_SYMBOL.test(p.name || '');
 }
 
-export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh, onEnableDemo }: RadarProps) {
+export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh, onEnableDemo, verified }: RadarProps) {
   // Hide obvious test launches by default; the toggle is honest about what it does.
   const [showTests, setShowTests] = useState(false);
 
@@ -54,6 +57,10 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
   }, [launches, showTests]);
 
   const liveCount = sorted.filter((l) => l.status === 'live').length;
+  const verifiedCount = useMemo(
+    () => (verified ? sorted.filter((l) => verified.has(l.tokenMint)).length : 0),
+    [sorted, verified],
+  );
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -72,6 +79,11 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
           {status === 'live' && !demoMode && sorted.length > 0 && (
             <span className="text-[11px] text-[color:var(--ink-faint)] num">
               · {liveCount} live / {sorted.length} total
+            </span>
+          )}
+          {verifiedCount > 0 && (
+            <span className="text-[11px] num text-[color:var(--live)]">
+              · {verifiedCount} verified
             </span>
           )}
           {testCount > 0 && (
@@ -123,6 +135,7 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
           const isNew = newKeys.has(p.pubkey);
           const { price, progress, raised } = poolStats(p);
           const selected = p.pubkey === selectedPubkey;
+          const v = verified?.get(p.tokenMint);
           return (
             <button
               key={p.pubkey}
@@ -132,17 +145,51 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
               }`}
             >
               <div className="flex items-center gap-4 gutter py-4">
-                <div
-                  className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
-                  style={{ backgroundColor: `hsl(${hueOf(p.pubkey)} 62% 78%)` }}
-                >
-                  {initials(p.name)}
+                {/* CookieSwap supplies the logo when it has vetted the token; the
+                    generated initials sit underneath so a broken image URL just
+                    falls back rather than leaving a hole in the row. */}
+                <div className="relative w-10 h-10 shrink-0">
+                  <div
+                    className="absolute inset-0 rounded-full flex items-center justify-center text-[11px] font-medium text-black/70"
+                    style={{ backgroundColor: `hsl(${hueOf(p.pubkey)} 62% 78%)` }}
+                  >
+                    {initials(p.name)}
+                  </div>
+                  {v?.logoUrl && (
+                    <img
+                      src={v.logoUrl}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 w-10 h-10 rounded-full object-cover bg-white hair"
+                      onError={(e) => {
+                        // One hop to another gateway, then give up and let the
+                        // generated initials underneath show through.
+                        const img = e.currentTarget;
+                        if (img.dataset.retried) {
+                          img.style.display = 'none';
+                          return;
+                        }
+                        img.dataset.retried = '1';
+                        const next = alternateGateway(img.src);
+                        if (next === img.src) img.style.display = 'none';
+                        else img.src = next;
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-[14.5px] font-medium tracking-[-0.012em] truncate">{p.name}</span>
                     <span className="shrink-0 text-[11.5px] text-[color:var(--ink-faint)]">${p.symbol}</span>
+                    {v && (
+                      <span
+                        className="chip chip-live shrink-0"
+                        title={`Verified by CookieSwap${v.projectName ? ` · ${v.projectName}` : ''}`}
+                      >
+                        verified
+                      </span>
+                    )}
                     {isNew && <span className="chip chip-ink shrink-0">new</span>}
                     {p.antiSnipe && p.status === 'live' && (
                       <span className="chip chip-warn shrink-0 hidden sm:inline-flex">anti-snipe</span>

@@ -190,6 +190,7 @@ simulates before asking for a signature. `src/lib/tx.test.ts` covers the tamper 
 | **Genesis hash** | `9wDaBRDgArEUpvhHxGguNkwozsZh4UpGZB9o2EoEcBB2` — asserted before signing |
 | **Cookie DAS** | `api.cookiescan.io` — `getAssetsByOwner` for wallet balances, `/api/price/cook` for the COOK/USD figure next to claimable amounts |
 | **Cookiebox** | `agg.cookiebox.app` — `/quote` and `/swap-tx` for the post-graduation exit |
+| **CookieSwap** | `cookieswap.fun/api/verify/tokens` — the ecosystem's verified-token registry, CORS-open so the browser reads it directly. Launches it has vetted get their real logo and a green `verified` chip on the radar; 2 of 12 live pools matched at the time of writing. Logos are IPFS-pinned, so a failed gateway is retried once through another |
 | **Cookiescan** | every transaction, address and mint in the UI links to `cookiescan.io` |
 | **Bridge** | linked in the footer for anyone arriving without COOK |
 
@@ -337,6 +338,7 @@ cooksnipe/
     │   ├── wallet.ts             Wallet Standard + injected discovery, sign-only adapters
     │   ├── curve.ts              BigInt port of the on-chain bonding-curve rounding
     │   ├── cookiebox.ts          aggregator quotes and swap transactions
+    │   ├── cookieswap.ts         CookieSwap's verified-token registry + IPFS gateway fallback
     │   ├── das.ts                Cookiescan DAS assets + COOK price
     │   ├── types.ts              the shapes the API returns, in one place
     │   ├── format.ts             number, price and address formatting
@@ -346,7 +348,8 @@ cooksnipe/
     └── app/                      UI
         ├── AppView.tsx           shell, chrome, tabs, URL state, footer
         ├── Mark.tsx              the mark as a component
-        ├── Radar.tsx             the live pool feed
+        ├── Radar.tsx             the live pool feed, with CookieSwap's verified marks
+        ├── useVerified.ts        loads CookieSwap's verified tokens once, never blocks the feed
         ├── TokenDetail.tsx       one pool: curve, stats, trade panel
         ├── BondingChart.tsx      live price chart (lightweight-charts, paper palette)
         ├── TradePanel.tsx        buy and sell on the curve
