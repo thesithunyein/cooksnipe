@@ -9,3 +9,7 @@ dist-ssr
 # Rust program workspace — the compiled artifacts are ~226 MB and rebuildable,
 # only the crate source is worth tracking.
 program/target
+
+# deploy-program.mjs writes this on first run: it holds the program's secret
+# key, i.e. the upgrade authority for the deployed program. Never commit it.
+program/program-keypair.json

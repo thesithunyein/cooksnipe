@@ -1,0 +1,59 @@
+[package]
+name = "cooksnipe-claimlog"
+version = "0.1.0"
+edition = "2021"
+description = "CookSnipe claim receipts on Cookie Chain: an append-only log of who claimed what, and when."
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+solana-program = "=2.1.21"
+
+# The sbpf toolchain's cargo is 1.79, which predates edition2024. Several
+# transitive deps of solana-program have published newer releases that require
+# it, so each is pinned back to the last pre-edition2024 version. Remove these
+# pins only when the platform-tools rustc is upgraded past 1.79.
+[dependencies.blake3]
+version = "=1.8.2"
+default-features = false
+
+[dependencies.serde]
+version = "=1.0.225"
+default-features = false
+
+[dependencies.serde_derive]
+version = "=1.0.225"
+default-features = false
+
+[dependencies.serde_json]
+version = "=1.0.140"
+default-features = false
+features = ["alloc"]
+
+[dependencies.indexmap]
+version = "=2.11.4"
+
+[dependencies.toml_edit]
+version = "=0.22.0"
+default-features = false
+features = ["parse"]
+
+
+[dependencies.zeroize]
+version = "=1.8.2"
+default-features = false
+
+[dependencies.borsh-derive]
+version = "=1.5.1"
+default-features = false
+
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+overflow-checks = true
+[dependencies.proc-macro-crate]
+version = "=3.1.0"
+default-features = false
