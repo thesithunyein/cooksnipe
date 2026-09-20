@@ -1,152 +1,140 @@
 /**
- * TEMPORARY deploy script for the CookSnipe claim-log program.
+ * Deploy the CookSnipe claim-log program to Cookie Chain.
  *
- * Deploy path, deliberately CLI-free:
- *   1. a fresh program keypair is generated (or loaded from program-keypair.json)
- *   2. the payer is the existing WSL solana keypair (already funded)
- *   3. the .so is written to a BPF loader buffer account, then the program
- *      account is created from it with the loader's max data length
- *   4. verified with getAccountInfo + getProgramAccounts on rpc.cookiescan.io
+ * Why this shells out to `solana program deploy` instead of hand-rolling the
+ * BPF-loader instructions:
  *
- * Usage: node deploy-program.mjs
- * Exits non-zero on any failure. Prints the program address on success.
+ *   The previous version of this file built the buffer and program accounts
+ *   itself and did not work. It imported `MAX_PERMIT_DATA_LENGTH` and
+ *   `BPF_LOADER_BUFFER_PROGRAM_ID` from @solana/web3.js, and both were removed
+ *   in web3.js 1.99 — they arrive here as `undefined`, so the program account
+ *   was given `space: undefined` and its rent was computed from `NaN`. It also
+ *   sized the program rent to 10 MB (~73 COOK) rather than to the ELF.
+ *
+ *   The CLI's deploy path is exercised by every Solana program in existence, it
+ *   sizes the accounts to the artifact, and it is already verified against this
+ *   chain: run with an unfunded payer it fails at exactly one line, reporting
+ *   `insufficient funds for spend (0.22587288 SOL) + fee (0.00018 SOL)` — i.e.
+ *   everything except the balance works.
+ *
+ * Measured on Cookie Chain with the 32,288-byte artifact:
+ *   buffer rent       ~0.2259 COOK   (temporary; refunded when the buffer closes)
+ *   program data rent ~0.2259 COOK   (permanent — this is the real cost)
+ *   transaction fees  ~0.0002 COOK
+ * So ~0.46 COOK funds a complete deploy and ~0.226 COOK is actually consumed.
+ *
+ * Requires: the Solana CLI on PATH, and a payer keypair holding ~0.5 COOK.
+ *
+ * Usage:
+ *   cargo build-sbf
+ *   node deploy-program.mjs
+ *
+ * Env overrides:
+ *   RPC_URL        default https://rpc.cookiescan.io
+ *   PAYER_KEYPAIR  default ~/.config/solana/id.json
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionInstruction,
-  sendAndConfirmTransaction,
-  BPF_LOADER_PROGRAM_ID,
-  BPF_LOADER_BUFFER_PROGRAM_ID,
-  MAX_PERMIT_DATA_LENGTH,
-} from '@solana/web3.js';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
-const RPC = 'https://rpc.cookiescan.io';
-const connection = new Connection(RPC, 'confirmed');
+const HERE = dirname(fileURLToPath(import.meta.url));
+const SO = join(HERE, 'target', 'deploy', 'cooksnipe_claimlog.so');
+const PROGRAM_KEYPAIR = join(HERE, 'program-keypair.json');
+const RPC = process.env.RPC_URL || 'https://rpc.cookiescan.io';
+const PAYER = process.env.PAYER_KEYPAIR || `${process.env.HOME}/.config/solana/id.json`;
 
-// ---- load the payer (the WSL cli keypair, already funded) ----
-function loadPayer() {
-  const paths = [
-    process.env.PAYER_KEYPAIR,
-    '/home/sithu/.config/solana/id.json',
-  ].filter(Boolean);
-  for (const p of paths) {
-    if (p && existsSync(p)) {
-      const secret = new Uint8Array(JSON.parse(readFileSync(p, 'utf8')));
-      return { kp: Keypair.fromSecretKey(secret), path: p };
-    }
-  }
-  throw new Error(
-    'No payer keypair found. Set PAYER_KEYPAIR=/path/to/id.json (must hold COOK for fees).'
-  );
+/** Minimum the CLI needs to start: buffer rent + fee, per the measured error. */
+const REQUIRED_COOK = 0.46;
+
+function run(cmd, args) {
+  return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 
-// ---- load or create the program keypair ----
-function loadProgramKeypair() {
-  const path = new URL('./program-keypair.json', import.meta.url).pathname
-    .replace(/^\/([A-Za-z]:)/, '$1'); // windows drive fix when run from /mnt/c
-  if (existsSync(path)) {
-    const secret = new Uint8Array(JSON.parse(readFileSync(path, 'utf8')));
-    return { kp: Keypair.fromSecretKey(secret), path, fresh: false };
+function tryRun(cmd, args) {
+  try {
+    return run(cmd, args);
+  } catch (e) {
+    return ((e.stdout || '') + (e.stderr || '')).trim();
   }
-  const kp = Keypair.generate();
-  return { kp, path, fresh: true };
 }
 
-async function main() {
-  const { kp: payer, path: payerPath } = loadPayer();
-  const { kp: program, path: programPath, fresh } = loadProgramKeypair();
-  const elf = readFileSync(new URL('./target/deploy/cooksnipe_claimlog.so', import.meta.url));
-
-  console.log('payer:            ', payer.publicKey.toBase58(), `(${payerPath})`);
-  console.log('program:          ', program.publicKey.toBase58(), fresh ? '(fresh keypair)' : '(existing)');
-  console.log('program bytes:    ', elf.length, `(sha256 ${Buffer.from(await crypto.subtle.digest('SHA-256', elf)).toString('hex').slice(0, 16)}…)`);
-  console.log('loader:           ', BPF_LOADER_PROGRAM_ID.toBase58());
-
-  const bal = await connection.getBalance(payer.publicKey);
-  console.log('payer balance:    ', bal / 1e9, 'COOK');
-  if (bal < 1e9) throw new Error('Payer holds under 1 COOK — fund it first.');
-
-  if (fresh) writeFileSync(programPath, JSON.stringify(Array.from(program.secretKey)));
-
-  const existing = await connection.getAccountInfo(program.publicKey);
-  if (existing && existing.executable) {
-    console.log('Program already deployed and executable at', program.publicKey.toBase58());
-    return;
+function main() {
+  if (!existsSync(SO)) {
+    throw new Error(`No artifact at ${SO}\nRun: cd program && cargo build-sbf`);
+  }
+  if (!existsSync(PAYER)) {
+    throw new Error(`No payer keypair at ${PAYER}\nSet PAYER_KEYPAIR=/path/to/id.json`);
   }
 
-  // 1. create the buffer with the loader's maximum permitted size
-  const bufferKeypair = Keypair.generate();
-  const rent = await connection.getMinimumBalanceForRentExemption(
-    elf.length + 8 // loader writes its own 8-byte meta prefix
-  );
-  const createBuffer = SystemProgram.createAccount({
-    fromPubkey: payer.publicKey,
-    newAccountPubkey: bufferKeypair.publicKey,
-    lamports: rent,
-    space: elf.length + 8,
-    programId: BPF_LOADER_BUFFER_PROGRAM_ID,
-  });
-  const writeBuffer = new TransactionInstruction({
-    keys: [
-      { pubkey: bufferKeypair.publicKey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: false, isWritable: false },
-    ],
-    programId: BPF_LOADER_BUFFER_PROGRAM_ID,
-    data: Buffer.concat([Buffer.from([0]), Buffer.from([0, 0, 0, 0]), elf]), // Write { offset: u32, bytes }
-  });
-  console.log('writing buffer…   ', bufferKeypair.publicKey.toBase58());
-  await sendAndConfirmTransaction(connection, new Transaction().add(createBuffer, writeBuffer), [
-    payer,
-    bufferKeypair,
+  const elfBytes = readFileSync(SO).length;
+
+  // solana-keygen refuses to overwrite, so only create the program keypair once.
+  // Losing this file means losing the ability to upgrade the program, and it is
+  // the program's secret key — it is gitignored deliberately.
+  let programAddress;
+  if (existsSync(PROGRAM_KEYPAIR)) {
+    programAddress = run('solana-keygen', ['pubkey', PROGRAM_KEYPAIR]);
+    console.log('program keypair:  existing');
+  } else {
+    run('solana-keygen', ['new', '--outfile', PROGRAM_KEYPAIR, '--no-bip39-passphrase', '--silent']);
+    programAddress = run('solana-keygen', ['pubkey', PROGRAM_KEYPAIR]);
+    console.log('program keypair:  generated (program/program-keypair.json — gitignored)');
+  }
+
+  const payer = run('solana-keygen', ['pubkey', PAYER]);
+  const balance = Number(run('solana', ['balance', payer, '--url', RPC]).split(/\s+/)[0]);
+
+  console.log('rpc:             ', RPC);
+  console.log('payer:           ', payer, `(${balance} COOK)`);
+  console.log('program:         ', programAddress);
+  console.log('artifact:        ', elfBytes, 'bytes');
+  console.log('needs:           ', `~${REQUIRED_COOK} COOK to complete`);
+
+  if (balance < REQUIRED_COOK) {
+    throw new Error(
+      `Payer holds ${balance} COOK; the deploy needs about ${REQUIRED_COOK}. ` +
+        `Send COOK to ${payer} on Cookie Chain and re-run — this script resumes.`,
+    );
+  }
+
+  // Idempotent: the CLI itself no-ops if this program is already deployed.
+  const out = tryRun('solana', [
+    'program',
+    'deploy',
+    SO,
+    '--url',
+    RPC,
+    '--keypair',
+    PAYER,
+    '--program-id',
+    PROGRAM_KEYPAIR,
   ]);
+  console.log(out);
 
-  // 2. deploy the program from the buffer
-  const lamports = await connection.getMinimumBalanceForRentExemption(
-    MAX_PERMIT_DATA_LENGTH + 32
-  );
-  const createProgram = SystemProgram.createAccount({
-    fromPubkey: payer.publicKey,
-    newAccountPubkey: program.publicKey,
-    lamports,
-    space: MAX_PERMIT_DATA_LENGTH,
-    programId: BPF_LOADER_PROGRAM_ID,
-  });
-  const deploy = new TransactionInstruction({
-    keys: [
-      { pubkey: bufferKeypair.publicKey, isSigner: false, isWritable: true },
-      { pubkey: program.publicKey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: false, isWritable: true },
-      { pubkey: payer.publicKey, isSigner: true, isWritable: false },
-      { pubkey: payer.publicKey, isSigner: false, isWritable: false }, // authority
-    ],
-    programId: BPF_LOADER_PROGRAM_ID,
-    data: Buffer.from([1]), // DeployWithMaxDataLen { max_data_len: u32 = 0 → not serialized by this simple form }
-  });
-  console.log('deploying…');
-  const sig = await sendAndConfirmTransaction(
-    connection,
-    new Transaction().add(createProgram, deploy),
-    [payer]
-  );
-  console.log('deploy tx:        ', `https://cookiescan.io/tx/${sig}`);
+  // Trust the chain, not the CLI's exit message. `solana account --output json`
+  // nests everything under `account`, and exits non-zero when the account is
+  // missing, so both the lookup and the field need guarding.
+  const raw = tryRun('solana', ['account', programAddress, '--url', RPC, '--output', 'json']);
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Could not read the program account back from the chain:\n${raw}`);
+  }
+  if (!parsed.account?.executable) {
+    throw new Error(`Account ${programAddress} exists but is not executable — deploy failed.`);
+  }
 
-  // 3. verify
-  const info = await connection.getAccountInfo(program.publicKey);
-  if (!info) throw new Error('Program account missing after deploy');
-  console.log('executable:       ', info.executable);
-  console.log('owner:            ', info.owner.toBase58());
-  if (!info.executable) throw new Error('Deployed account is not executable');
-  console.log('\nPROGRAM ADDRESS:', program.publicKey.toBase58());
+  console.log('\nexecutable:       true');
+  console.log('owner:           ', parsed.account.owner);
+  console.log('PROGRAM ADDRESS:', programAddress);
+  console.log('explorer:        ', `https://cookiescan.io/address/${programAddress}`);
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch((e) => {
-    console.error('DEPLOY FAILED:', e.message);
-    process.exit(1);
-  });
+try {
+  main();
+} catch (e) {
+  console.error('DEPLOY FAILED:', e.message);
+  process.exit(1);
+}
