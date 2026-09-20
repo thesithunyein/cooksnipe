@@ -1,12 +1,11 @@
 # X thread: CookSnipe submission
 
-Posting notes: post as one thread. Post 1 carries the **video** (1:41 demo) —
-it is the strongest asset and earns the hook's reach. Screenshots follow:
-radar with the verified chips on 2/, the green Confirmed banner with the
-signature on 3/, claim center on 4/, the program page on 5/. After posting,
-drop the thread URL in the Cookie Chain Telegram (General), then fill
-`links.x` and `links.video` in the catalogue PR (#26) and file the entry on
-Earn.
+Posting notes: post as one thread. Post 1 carries the **video** (1:41 demo),
+the strongest asset. Screenshots follow: radar on 2/, the green Confirmed
+banner on 3/, claim center on 4/, the program page on 5/. Posts 2 and 3 are
+trimmed to fit a free account's 280-character limit. After posting, drop the
+thread URL in the Cookie Chain Telegram (General), then fill `links.x` and
+`links.video` in the catalogue PR (#26) and file the entry on Earn.
 
 ---
 
@@ -16,17 +15,14 @@ CookSnipe: a live radar, curve trading, and a claim center that scans every pool
 for money a wallet is owed. 🧵
 
 **2/** The radar watches the MomoSwap launchpad live: price, raised, buyers,
-graduation progress, anti-snipe flags. When the API cannot decode a pool it says
-so on screen instead of hiding it. Tokens that CookieSwap's registry has vetted
-get their real logo and a green verified chip, so a vetted project looks
-different from a throwaway probe.
+graduation progress, anti-snipe flags. If the API cannot decode a pool, it says
+so on screen instead of hiding it. CookieSwap-vetted tokens get their real logo
+and a green verified chip.
 
-**3/** Buy and sell the bonding curve with Nightly. Every transaction is built
-unsigned, verified byte-for-byte against the API's own description (fee payer,
-program ids, instruction data, account order), simulated on Cookie Chain, and
-only then broadcast. Why bother: a wallet broadcasts through its own RPC, which
-by default still points at Solana mainnet, so the transaction silently never
-lands. CookSnipe sends over the Cookie Chain RPC.
+**3/** Buy and sell the curve with Nightly. Every transaction is verified
+instruction-by-instruction against the API's own description, simulated, then
+signed. A wallet's own RPC still points at Solana mainnet by default, so txs
+never land. CookSnipe sends over the Cookie Chain RPC.
 
 **4/** The claim center is the part nothing else does. Paste any address and it
 walks every pool asking what that wallet is owed: refunds from expired fair-mode
