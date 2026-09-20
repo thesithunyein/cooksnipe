@@ -13,9 +13,10 @@ is over the launchpad never tells you what it still owes you. So I built
 CookSnipe: a live radar, curve trading, and a claim center that scans every pool
 for money a wallet is owed. 🧵
 
-**2/** The radar watches every MomoSwap launch live: price, raised, buyers,
-graduation progress, anti-snipe flags. Tokens that CookieSwap's registry has
-vetted get their real logo and a green verified chip, so a vetted project looks
+**2/** The radar watches the MomoSwap launchpad live: price, raised, buyers,
+graduation progress, anti-snipe flags. When the API cannot decode a pool it says
+so on screen instead of hiding it. Tokens that CookieSwap's registry has vetted
+get their real logo and a green verified chip, so a vetted project looks
 different from a throwaway probe.
 
 **3/** Buy and sell the bonding curve with Nightly. Every transaction is built

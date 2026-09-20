@@ -46,7 +46,7 @@ no screen that lists them.
 
 | | | |
 |---|---|---|
-| **Radar** | Every pool on the launchpad, polled live, sorted by state; new launches are flagged as they appear. |
+| **Radar** | Every pool the launchpad API will serve, polled live and sorted by state; new launches are flagged as they appear, and pools the API cannot decode are reported on screen rather than silently dropped. Each row carries the token's official logo from its own launch metadata, with CookieSwap's verified mark on top where the registry has vetted the mint. |
 | **Trade** | Buy and sell on the bonding curve with your own wallet — Nightly first — with a local quote, pool limits checked before you sign, six-stage progress, and an explorer link on confirmation. |
 | **DEX exit** | For pools that graduated, an exit route quoted through the **Cookiebox** aggregator, with fee, price impact and the split path shown before signing. |
 | **Portfolio** | Every curve position for an address, with invested / returned / open value read straight from the position account, plus the wallet's real token balances from the **Cookie DAS** index. |
@@ -340,6 +340,7 @@ cooksnipe/
     │   ├── curve.ts              BigInt port of the on-chain bonding-curve rounding
     │   ├── cookiebox.ts          aggregator quotes and swap transactions
     │   ├── cookieswap.ts         CookieSwap's verified-token registry, URL scheme guard, IPFS fallback
+    │   ├── tokenMeta.ts          each pool's official metadata logo, resolved from its ipfs uri
     │   ├── cookieswap.test.ts    the scheme guard, the social list, the gateway hop
     │   ├── das.ts                Cookiescan DAS assets + COOK price
     │   ├── types.ts              the shapes the API returns, in one place
@@ -350,8 +351,9 @@ cooksnipe/
     └── app/                      UI
         ├── AppView.tsx           shell, chrome, tabs, URL state, footer
         ├── Mark.tsx              the mark as a component
-        ├── Radar.tsx             the live pool feed, with CookieSwap's verified marks
+        ├── Radar.tsx             the live pool feed, official metadata logos plus CookieSwap's verified marks
         ├── useVerified.ts        loads CookieSwap's verified tokens once, never blocks the feed
+        ├── useTokenImages.ts     resolves official metadata logos per row, silent and non-blocking
         ├── TokenDetail.tsx       one pool: curve, stats, trade panel
         ├── BondingChart.tsx      the SVG bonding curve, plus the PricePoint type
         ├── LiveChart.tsx         the price chart, split out and lazy-loaded (see below)
