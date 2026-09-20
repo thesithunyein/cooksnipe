@@ -8,7 +8,7 @@ thread URL in the Cookie Chain Telegram (General), then fill `links.x` and
 ---
 
 **1/ Hook** — Cookie Chain launches live and die in a week — and the
-launchpad never tells you what it still owes you. So we built CookSnipe: a
+launchpad never tells you what it still owes you. So I built CookSnipe: a
 radar, curve trading, and a claim center that scans every pool for money a
 wallet is owed. 🧵
 

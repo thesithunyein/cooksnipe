@@ -199,27 +199,46 @@ on the chain, never on the mint.
 
 ## The claim-log program (`program/`)
 
-**Not deployed yet — there is no program address to cite.** The crate compiles to a 32 KB ELF
-(`program/target/deploy/cooksnipe_claimlog.so`) and the deploy path is verified against Cookie Chain,
-but the deploy wallet holds no COOK. Until `deploy-program.mjs` runs successfully there is no
-address, and the entry deliberately claims none.
+**Deployed and live on Cookie Chain.**
 
-The cost is measured, not estimated. Running the deploy with an unfunded payer fails at exactly one
-line and reports the requirement itself:
+| | |
+|---|---|
+| **Program address** | `AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85` |
+| **Deploy transaction** | [`4FJ4h3HM…eKe`](https://cookiescan.io/tx/4FJ4h3HMa5o16sxLTw27n3cTk4DxKYX8RVG3gPfzRTZzVBQbBgYChHzmB77Ab9ySBZn6GqwwqhsJc1Rc3wpGseKe) |
+| **Loader** | `BPFLoaderUpgradeab1e11111111111111111111111` (upgrade authority held by the deploy keypair) |
+| **Artifact** | 32,280-byte ELF, verified executable via `getAccountInfo` |
+
+The real cost was measured before it was paid. Running the deploy with an unfunded payer fails at
+exactly one line and reports the requirement itself:
 
 ```
 Error: Account DWfUjm…DVTh has insufficient funds for spend
        (0.22587288 SOL) + fee (0.00018 SOL)
 ```
 
-That 0.2259 COOK is the buffer, which is refunded when the buffer closes; the program data account
-costs about the same again and is permanent. **So ~0.46 COOK funds a complete deploy and ~0.226 COOK
-is actually consumed** — under three hundred-thousandths of a dollar.
+That 0.2259 COOK is the buffer, refunded when the buffer closes; the program data account costs about
+the same again and is permanent. **The completed deploy consumed 0.227 COOK**, leaving 0.7728 of the
+1 COOK a community member sent for exactly this purpose.
 
 The program is one instruction. `RecordClaim` appends a receipt — claimer, pool, claim kind, raw
-amount, slot — to a PDA seeded by `["cooksnipe", wallet, pool]`. It moves no lamports, makes no CPI,
-and exists so the Claim Center's answers are auditable on-chain instead of being taken on trust from
-CookSnipe's own UI.
+amount, slot — to an account seeded by `["cooksnipe", wallet, pool]`. It moves no lamports, makes no
+CPI, and exists so the Claim Center's answers are auditable on-chain instead of being taken on trust
+from CookSnipe's own UI.
+
+Its logic is verified, not just its deployment. Simulating a real `RecordClaim` against the deployed
+program executes it and logs the append:
+
+```
+Program AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85 invoke [1]
+Program log: cooksnipe claim #1 recorded at slot 26229696
+Program AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85 success
+```
+
+One design caveat, stated rather than hidden: the instruction checks `receipt.is_signer`, so it is
+reachable with a **client-signed receipt account owned by the program**, not with a bare PDA — a PDA
+cannot sign for itself from a client. The `receipt_pda()` helper documents the PDA layout the program
+uses for its seed derivation, but a caller must pass a signer. Switching the check to verifying the
+PDA's seeds (or routing through `invoke_signed`) is the fix if the PDA form is wanted.
 
 ```bash
 cd program
@@ -374,9 +393,12 @@ unreachable.
   wallet extension to do anything.
 - **The launchpad API skips pools it cannot decode** (10 of 22 in a recent response). The app says so
   in a banner instead of quietly under-reporting; reading those pool accounts over RPC is the fix.
-- **The claim-log program is not deployed**, so no CookSnipe program address appears in this repo or
-  the catalogue entry. The deploy needs ~0.46 COOK and the wallet holds none, so this is a funding
-  limit and not a design one — see above.
+- **The claim-log program has no client wiring yet.** It is deployed and its logic is verified by
+  simulation, but the app does not yet write receipts during a claim, so the Claim Center's results
+  are still read from the launchpad API rather than from the program. That is the next piece of work,
+  and the reason the program is described as an audit trail rather than a source of truth.
+- **The program's instruction needs a signer account**, so the PDA form in `receipt_pda()` is not
+  directly callable from a client — see the caveat above.
 
 ## License
 
