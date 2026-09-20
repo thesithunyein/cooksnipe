@@ -1,0 +1,4 @@
+# The site build only needs src/ and public/. The Rust program workspace is
+# tracked for source but its target/ directory is ~226 MB of rebuildable
+# artifacts, so keep it out of the deploy upload entirely.
+program/target

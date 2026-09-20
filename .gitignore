@@ -4,5 +4,8 @@ dist-ssr
 *.local
 .DS_Store
 .vercel
-.vercel
 .env*
+
+# Rust program workspace — the compiled artifacts are ~226 MB and rebuildable,
+# only the crate source is worth tracking.
+program/target
