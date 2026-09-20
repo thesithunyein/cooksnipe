@@ -10,7 +10,7 @@ CookSnipe does all three in one screen, on chain.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-0d0c0b?style=flat-square)](LICENSE)
 [![CI](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml/badge.svg)](https://github.com/thesithunyein/cooksnipe/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-22%20passing-1a7f4b?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/tests-23%20passing-1a7f4b?style=flat-square)](#testing)
 [![Network](https://img.shields.io/badge/network-Cookie%20Chain-0d0c0b?style=flat-square)](#cookie-chain-integration)
 [![Wallet](https://img.shields.io/badge/wallet-Nightly%20first-0d0c0b?style=flat-square)](#required-features-as-the-bounty-lists-them)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-0d0c0b?style=flat-square&logo=typescript&logoColor=ffffff)](tsconfig.json)
@@ -218,7 +218,7 @@ headers. Cookie DAS and the Cookiebox aggregator do send CORS headers, so they a
 | Command | What it does |
 |---|---|
 | `npm run dev` | Vite dev server, both routes, `/api` proxied to the launchpad |
-| `npm test` | Vitest: 22 unit tests over the curve math and the transaction verifier |
+| `npm test` | Vitest: 23 unit tests over the curve math and the transaction verifier |
 | `npm run test:watch` | The same suite in watch mode |
 | `npm run build` | `tsc --noEmit && vite build` → `app.html` + `landing.html` |
 | `npm run preview` | Serve the production build on the same two routes |
@@ -284,7 +284,7 @@ everywhere.
 npm test
 ```
 
-22 tests across two files, aimed at the two places a wrong answer costs money:
+23 tests across two files, aimed at the two places a wrong answer costs money:
 
 - **`curve.test.ts`** — the bonding-curve math is a BigInt port of the on-chain rounding, checked
   against the reference implementation, including the fee split and the boundary cases at each end of
