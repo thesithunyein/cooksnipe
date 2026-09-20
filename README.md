@@ -192,7 +192,8 @@ simulates before asking for a signature. `src/lib/tx.test.ts` covers the tamper 
 | **Cookiebox** | `agg.cookiebox.app` — `/quote` and `/swap-tx` for the post-graduation exit |
 | **CookieSwap** | `cookieswap.fun/api/verify/tokens` — the ecosystem's verified-token registry, CORS-open so the browser reads it directly. Launches it has vetted get their real logo and a green `verified` chip on the radar; 2 of 12 live pools matched at the time of writing. Logos are IPFS-pinned, so a failed gateway is retried once through another |
 | **Cookiescan** | every transaction, address and mint in the UI links to `cookiescan.io` |
-| **Bridge** | linked in the footer for anyone arriving without COOK |
+| **Bridge** | `hyperlane.cookiescan.io`, linked in the app footer for anyone arriving without COOK. Hyperlane moves COOK between Solana and Cookie Chain; in the bridge's own words, you sign once on the source chain and a relayer delivers it 1:1 to your destination wallet, typically within a few minutes |
+| **cookie-mcp** | the constant-product curve math in `src/lib/curve.ts` is a BigInt port of cookie-mcp's MIT-licensed reference implementation. The MCP server itself is a STDIO process for desktop AI clients, so it is **not** wired into this browser app. Deliberately documented as not used rather than claimed |
 
 One structural note: on Cookie Chain the native mint is
 `So11111111111111111111111111111111111111112` — the *same string* as wSOL on Solana. The app branches
