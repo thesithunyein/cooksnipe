@@ -39,7 +39,7 @@ function hueOf(seed: string): number {
 /** Obvious throwaway launches ("test", "TEST", "$FRND" frontend probes…) that
  *  would otherwise crowd the feed judges and traders see. Matched on symbol —
  *  case-insensitive, word-boundaried so "preTEST" style names survive. */
-const TEST_SYMBOL = /^(test|tests|testing|frnd|frontend|dummy|demo|tmp|temp|sample)$/i;
+const TEST_SYMBOL = /^(test|tests|testing|frnd|frontend|dummy|demo|tmp|temp|sample|canary)$/i;
 
 function isTestLaunch(p: LaunchRow): boolean {
   return TEST_SYMBOL.test(p.symbol || '') || TEST_SYMBOL.test(p.name || '');
