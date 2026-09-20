@@ -225,14 +225,27 @@ amount, slot — to an account seeded by `["cooksnipe", wallet, pool]`. It moves
 CPI, and exists so the Claim Center's answers are auditable on-chain instead of being taken on trust
 from CookSnipe's own UI.
 
-Its logic is verified, not just its deployment. Simulating a real `RecordClaim` against the deployed
-program executes it and logs the append:
+Its logic is verified on chain, not just its deployment. A real signed `RecordClaim` was sent and
+confirmed ([`sSWQUnEw…tRM`](https://cookiescan.io/tx/sSWQUnEw91F3DvsaXhUCMCqP6ZtSo12UKGKRKknJ7LWYD1LAX6pnCoL66BS1LPfjRQ1pTaSXyN9faBf9YdfktRM),
+slot 26230804, `Status: Ok`, 0.0015 COOK):
 
 ```
-Program AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85 invoke [1]
-Program log: cooksnipe claim #1 recorded at slot 26229696
+Program log: cooksnipe claim #1 recorded at slot 26230804
+Program AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85 consumed 1982 of 202850 compute units
 Program AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85 success
 ```
+
+The receipt account it wrote is readable by anyone from the chain alone:
+
+```
+address   Cum4DpEr6Z7wGQddDVY12DjnPaKFXSeZmikgfEN83YgT
+owner     AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85   size 85 bytes
+records   1
+claim #1  kind=0   amount=10022 COOK
+```
+
+That is the point of the program: a claim result the app reports can be checked against an account it
+cannot rewrite, rather than taken on trust from CookSnipe's own UI.
 
 One design caveat, stated rather than hidden: the instruction checks `receipt.is_signer`, so it is
 reachable with a **client-signed receipt account owned by the program**, not with a bare PDA — a PDA
