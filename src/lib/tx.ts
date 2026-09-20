@@ -104,6 +104,9 @@ export async function verifyAgainstExpectation(
 export function humanizeError(err: unknown, logs: string[] = []): string {
   const raw = err instanceof Error ? err.message : String(err);
   const all = `${raw}\n${logs.join('\n')}`;
+  if (/AccountNotFound|account not found/i.test(all)) {
+    return 'This wallet has no COOK yet, so it cannot pay the network fee. Fund it on Cookie Chain first.';
+  }
   if (/insufficient (lamports|funds)|0x1\b/.test(all)) {
     return 'Not enough COOK in this wallet to cover the amount plus network fees.';
   }

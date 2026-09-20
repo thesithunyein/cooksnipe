@@ -89,6 +89,15 @@ describe('humanizeError', () => {
     expect(humanizeError(new Error('custom program error: 0x1'))).toMatch(/not enough cook/i);
   });
 
+  it('explains a wallet that has never been funded', () => {
+    // What the RPC actually returns when the fee payer account does not exist yet:
+    // an unfunded wallet fails simulation before it can ever be signed.
+    expect(humanizeError('AccountNotFound')).toMatch(/no cook yet/i);
+    expect(humanizeError(new Error('Transaction simulation failed: AccountNotFound'))).toMatch(
+      /no cook yet/i,
+    );
+  });
+
   it('explains a declined signature', () => {
     expect(humanizeError(new Error('User rejected the request'))).toMatch(/declined/i);
   });
