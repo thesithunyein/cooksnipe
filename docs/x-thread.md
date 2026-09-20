@@ -1,10 +1,12 @@
 # X thread: CookSnipe submission
 
-Posting notes: post as one thread. Images: banner on 1/, radar with the verified
-chips on 2/, trade panel mid-transaction on 3/, claim center on 4/, the program
-page on 5/. After posting, drop the thread URL in the Cookie Chain Telegram
-(General), then fill `links.x` and `links.video` in the catalogue PR (#26) and
-file the entry on Earn.
+Posting notes: post as one thread. Post 1 carries the **video** (1:41 demo) —
+it is the strongest asset and earns the hook's reach. Screenshots follow:
+radar with the verified chips on 2/, the green Confirmed banner with the
+signature on 3/, claim center on 4/, the program page on 5/. After posting,
+drop the thread URL in the Cookie Chain Telegram (General), then fill
+`links.x` and `links.video` in the catalogue PR (#26) and file the entry on
+Earn.
 
 ---
 
