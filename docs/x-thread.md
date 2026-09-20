@@ -1,48 +1,25 @@
 # X thread: CookSnipe submission
 
-Posting notes: post as one thread. Post 1 carries the **video** (1:41 demo),
-the strongest asset. Screenshots follow: radar on 2/, the green Confirmed
-banner on 3/, claim center on 4/, the program page on 5/. Posts 2 and 3 are
-trimmed to fit a free account's 280-character limit. After posting, drop the
-thread URL in the Cookie Chain Telegram (General), then fill `links.x` and
-`links.video` in the catalogue PR (#26) and file the entry on Earn.
+Posting notes: the 1:41 demo video explains and demonstrates the app, so the
+thread is two posts rather than eight. Post 1 carries the video; post 2 is a
+self-reply with the how-to and the bridge guide, which also makes the pair a
+real thread as the brief asks. After posting, drop the thread URL in the
+Cookie Chain Telegram (General), then fill `links.x` and `links.video` in the
+catalogue PR (#26) and file the entry on Earn.
 
 ---
 
-**1/ Hook** A launch on Cookie Chain lives and dies in about a week, and when it
-is over the launchpad never tells you what it still owes you. So I built
-CookSnipe: a live radar, curve trading, and a claim center that scans every pool
-for money a wallet is owed. 🧵
+**1/** @TheCookieChain a launch lives and dies in a week, and the launchpad
+never says what it still owes you. So I built CookSnipe: a live radar, curve
+trading with Nightly, and a claim center that finds what a wallet is owed.
+cooksnipe.sithunyein.com/app
 
-**2/** The radar watches the MomoSwap launchpad live: price, raised, buyers,
-graduation progress, anti-snipe flags. If the API cannot decode a pool, it says
-so on screen instead of hiding it. CookieSwap-vetted tokens get their real logo
-and a green verified chip.
+**2/** How to use: connect Nightly, watch the radar, click a pool, trade the
+curve, then run a Claims scan on your address. New to Cookie Chain? COOK
+bridges 1:1 from Solana at hyperlane.cookiescan.io. Open source, MIT:
+github.com/thesithunyein/cooksnipe
 
-**3/** Buy and sell the curve with Nightly. Every transaction is verified
-instruction-by-instruction against the API's own description, simulated, then
-signed. A wallet's own RPC still points at Solana mainnet by default, so txs
-never land. CookSnipe sends over the Cookie Chain RPC.
+Optional third post:
 
-**4/** The claim center is the part nothing else does. Paste any address and it
-walks every pool asking what that wallet is owed: refunds from expired fair-mode
-pools, settlement payouts, graduated tokens, creator fees.
-
-**5/** I also deployed a claim-log program to Cookie Chain for 0.227 COOK. It
-writes claim records on chain, into an account the program owns, so a claim
-result can be checked against something the app cannot rewrite:
+Our claim-log program is live on Cookie Chain, deployed for 0.227 COOK:
 AQnozqcJTp75LogCWQhCc4bKhgZChAqF9HHBLNNqun85
-
-**6/** How to use it (1 minute): open cooksnipe.sithunyein.com/app, connect
-Nightly, watch the radar, click a pool, trade the curve, then check the Claims
-tab. You might be owed money right now.
-
-**7/** New to the chain? COOK bridges over from Solana at
-hyperlane.cookiescan.io. You sign once on the source chain and a relayer delivers
-it 1:1 to your wallet, typically within a few minutes. Only use bridges linked
-from official community channels.
-
-**8/** CookSnipe is open source, MIT. App: cooksnipe.sithunyein.com/app · Code:
-github.com/thesithunyein/cooksnipe · Built on MomoSwap's launchpad, Cookiebox,
-Cookie DAS and CookieSwap's verified-token registry. Run the claim scan on your
-own address before you go.
