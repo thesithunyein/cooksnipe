@@ -1,7 +1,8 @@
-import { Suspense, lazy, useMemo } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { CurveVisual, type PricePoint } from './BondingChart';
-import { verifiedLinks, type VerifiedToken } from '../lib/cookieswap';
+import { verifiedLinks, alternateGateway, type VerifiedToken } from '../lib/cookieswap';
+import { tokenImage } from '../lib/tokenMeta';
 import { DexExit } from './DexExit';
 import { poolStats } from '../lib/curve';
 import { explorerToken } from '../lib/chain';
@@ -64,6 +65,19 @@ function Stat({ label, value }: { label: string; value: string }) {
 export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTraded, onOpenClaims, verified }: TokenDetailProps) {
   const { price, raised, marketCap: mc, progress } = poolStats(pool);
 
+  // The pool's own metadata image, resolved once per uri (cached in tokenMeta).
+  const [metaUrl, setMetaUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setMetaUrl(null);
+    tokenImage(pool.uri).then((url) => {
+      if (alive) setMetaUrl(url);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [pool.uri]);
+
   const changePct = useMemo(() => {
     if (history.length < 2) return null;
     const first = history[0].price;
@@ -95,11 +109,51 @@ export function TokenDetail({ pool, history, tradeFeeBps, wallet, onBack, onTrad
         <button onClick={onBack} aria-label="Back to the radar" className="opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
           <ArrowLeft size={17} strokeWidth={1.75} />
         </button>
-        <div
-          className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center text-[11px] font-medium text-black/70"
-          style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 62% 78%)` }}
-        >
-          {initials(pool.name)}
+        {/* Same three layers as the radar: official metadata image, CookieSwap
+            verified logo on top, initials underneath. */}
+        <div className="relative w-10 h-10 rounded-full shrink-0">
+          <div
+            className="absolute inset-0 rounded-full flex items-center justify-center text-[11px] font-medium text-black/70"
+            style={{ backgroundColor: `hsl(${hueOf(pool.pubkey)} 62% 78%)` }}
+          >
+            {initials(pool.name)}
+          </div>
+          {metaUrl && !verified?.logoUrl && (
+            <img
+              src={metaUrl}
+              alt=""
+              className="absolute inset-0 w-10 h-10 rounded-full object-cover bg-white hair"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.dataset.retried) {
+                  img.style.display = 'none';
+                  return;
+                }
+                img.dataset.retried = '1';
+                const next = alternateGateway(img.src);
+                if (next === img.src) img.style.display = 'none';
+                else img.src = next;
+              }}
+            />
+          )}
+          {verified?.logoUrl && (
+            <img
+              src={verified.logoUrl}
+              alt=""
+              className="absolute inset-0 w-10 h-10 rounded-full object-cover bg-white hair"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.dataset.retried) {
+                  img.style.display = 'none';
+                  return;
+                }
+                img.dataset.retried = '1';
+                const next = alternateGateway(img.src);
+                if (next === img.src) img.style.display = 'none';
+                else img.src = next;
+              }}
+            />
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5 min-w-0">

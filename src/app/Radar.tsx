@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { poolStats } from '../lib/curve';
 import { Mark } from './Mark';
+import { useTokenImages } from './useTokenImages';
 import { formatCook, formatPrice, timeAgo } from '../lib/format';
 import { alternateGateway, type VerifiedToken } from '../lib/cookieswap';
 import type { LaunchRow } from '../lib/types';
@@ -47,6 +48,9 @@ function isTestLaunch(p: LaunchRow): boolean {
 export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, status, error, lastUpdated, onRefresh, onEnableDemo, verified }: RadarProps) {
   // Hide obvious test launches by default; the toggle is honest about what it does.
   const [showTests, setShowTests] = useState(false);
+
+  // Official per-pool logos, resolved from each launch's own metadata uri.
+  const tokenImages = useTokenImages(launches);
 
   const testCount = useMemo(() => launches.filter(isTestLaunch).length, [launches]);
 
@@ -136,6 +140,7 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
           const { price, progress, raised } = poolStats(p);
           const selected = p.pubkey === selectedPubkey;
           const v = verified?.get(p.tokenMint);
+          const metaUrl = tokenImages.get(p.pubkey) || undefined;
           return (
             <button
               key={p.pubkey}
@@ -145,9 +150,11 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
               }`}
             >
               <div className="flex items-center gap-4 gutter py-4">
-                {/* CookieSwap supplies the logo when it has vetted the token; the
-                    generated initials sit underneath so a broken image URL just
-                    falls back rather than leaving a hole in the row. */}
+                {/* Three layers, best source wins: the pool's own metadata
+                    image (creator-set at launch), CookieSwap's verified logo
+                    on top when it has vetted the mint, and the generated
+                    initials underneath so any broken URL just falls back
+                    rather than leaving a hole in the row. */}
                 <div className="relative w-10 h-10 shrink-0">
                   <div
                     className="absolute inset-0 rounded-full flex items-center justify-center text-[11px] font-medium text-black/70"
@@ -155,6 +162,25 @@ export function Radar({ launches, newKeys, selectedPubkey, onSelect, demoMode, s
                   >
                     {initials(p.name)}
                   </div>
+                  {metaUrl && !v?.logoUrl && (
+                    <img
+                      src={metaUrl}
+                      alt=""
+                      loading="lazy"
+                      className="absolute inset-0 w-10 h-10 rounded-full object-cover bg-white hair"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (img.dataset.retried) {
+                          img.style.display = 'none';
+                          return;
+                        }
+                        img.dataset.retried = '1';
+                        const next = alternateGateway(img.src);
+                        if (next === img.src) img.style.display = 'none';
+                        else img.src = next;
+                      }}
+                    />
+                  )}
                   {v?.logoUrl && (
                     <img
                       src={v.logoUrl}
