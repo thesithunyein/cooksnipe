@@ -197,6 +197,34 @@ One structural note: on Cookie Chain the native mint is
 `So11111111111111111111111111111111111111112` — the *same string* as wSOL on Solana. The app branches
 on the chain, never on the mint.
 
+## The claim-log program (`program/`)
+
+**Not deployed yet — there is no program address to cite.** The crate compiles to a 32 KB ELF
+(`program/target/deploy/cooksnipe_claimlog.so`) and the deploy script is written and rehearsed, but
+deploying needs roughly 1.16 COOK of rent and the deploy wallet is currently empty. Until
+`deploy-program.mjs` runs successfully there is no address, and the entry deliberately claims none.
+
+The program is one instruction. `RecordClaim` appends a receipt — claimer, pool, claim kind, raw
+amount, slot — to a PDA seeded by `["cooksnipe", wallet, pool]`. It moves no lamports, makes no CPI,
+and exists so the Claim Center's answers are auditable on-chain instead of being taken on trust from
+CookSnipe's own UI.
+
+```bash
+cd program
+cargo build-sbf            # → target/deploy/cooksnipe_claimlog.so
+PAYER_KEYPAIR=~/.config/solana/id.json node deploy-program.mjs
+```
+
+The script needs no Solana CLI: it generates the program keypair, writes the ELF into a BPF-loader
+buffer, creates the program account, then verifies with `getAccountInfo` and prints the address.
+
+> **The deploy writes `program/program-keypair.json`, which holds the program's secret key and is
+> therefore its upgrade authority. It is gitignored. Never commit or share it** — losing it means the
+> program can never be upgraded, and leaking it means someone else can redeploy over it.
+
+The newer dependencies are pinned in `Cargo.toml` because the SBF toolchain's rustc is 1.79 and
+predates edition2024; the comment there explains the pins and when to drop them.
+
 ## Quickstart
 
 ```bash
@@ -233,6 +261,11 @@ cooksnipe/
 ├── vite.config.ts                two entries + the /api proxy for dev and preview
 ├── vercel.json                   the same routes + the /api rewrite in production
 ├── LICENSE                       MIT
+├── program/                      Rust claim-log program — built, not deployed (see above)
+│   ├── Cargo.toml                solana-program 2.1.21, with the edition2024 pins documented
+│   ├── src/lib.rs                one instruction: RecordClaim appends a receipt to a PDA
+│   ├── deploy-program.mjs        buffer + BPF-loader deploy, no Solana CLI needed
+│   └── program-keypair.json      NOT COMMITTED — the program's secret key, gitignored
 ├── public/
 │   ├── landing.html              the scroll-scrubbed landing — one file, edit it directly
 │   ├── mark.svg                  the mark: one colour, inherits currentColor, knocked-out bite
@@ -321,6 +354,8 @@ unreachable.
   wallet extension to do anything.
 - **The launchpad API skips pools it cannot decode** (10 of 22 in a recent response). The app says so
   in a banner instead of quietly under-reporting; reading those pool accounts over RPC is the fix.
+- **The claim-log program is not deployed**, so no CookSnipe program address appears in this repo or
+  the catalogue entry. That is a funding limit, not a design one — see above.
 
 ## License
 
